@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/http"
 )
 
@@ -13,13 +14,12 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Чтение URL из тела POST-запроса.
-	urlBytes := make([]byte, r.ContentLength)
-	_, err := r.Body.Read(urlBytes)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read URL from request body", http.StatusInternalServerError)
 		return
 	}
-	url := string(urlBytes)
+	url := string(body)
 
 	// Генерация уникального идентификатора (короткого пути) и сохранение URL.
 	id := generateID()
