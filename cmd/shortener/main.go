@@ -21,7 +21,6 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	link := strings.TrimSpace(string(bodyBytes))
 	if link == "" {
@@ -70,8 +69,8 @@ func generateRandomID(length int) string {
 func main() {
 	urlMap = make(map[string]string)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/shorten", mainPage)
-	mux.HandleFunc("/", redirect)
+	mux.HandleFunc("/", mainPage)
+	mux.HandleFunc("/shorten", redirect)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
