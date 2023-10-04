@@ -69,7 +69,7 @@ func main() {
 	urlMap = make(map[string]string)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", mainPage)
-	mux.HandleFunc("/shorten", redirect)
+	mux.HandleFunc("/shorten/", redirect)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
