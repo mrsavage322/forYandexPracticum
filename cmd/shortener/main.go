@@ -6,9 +6,14 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 )
 
-var urlMap map[string]string
+var (
+	urlMap     = make(map[string]string)
+	urlMapLock sync.Mutex
+)
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -35,7 +40,9 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	shortURL := fmt.Sprintf("http://localhost:8080/%s", id)
 
 	// Сохраняем сокращенный URL в карту
+	urlMapLock.Lock()
 	urlMap[id] = link
+	urlMapLock.Unlock()
 
 	// Возвращаем сокращенный URL как ответ с кодом 201
 	w.Header().Set("Content-Type", "text/plain")
@@ -45,7 +52,9 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 
 func redirect(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/")
+	urlMapLock.Lock()
 	originalURL, ok := urlMap[id]
+	urlMapLock.Unlock()
 	if !ok {
 		http.Error(w, "Несуществующий идентификатор", http.StatusBadRequest)
 		return
@@ -56,8 +65,8 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateRandomID(length int) string {
-	//rand.Seed(time.Now().UnixNano())
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	rand.Seed(time.Now().UnixNano())
 	result := make([]byte, length)
 	for i := 0; i < length; i++ {
 		result[i] = chars[rand.Intn(len(chars))]
@@ -66,7 +75,6 @@ func generateRandomID(length int) string {
 }
 
 func main() {
-	urlMap = make(map[string]string)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", mainPage)
 	mux.HandleFunc("/shorten/", redirect)
