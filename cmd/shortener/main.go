@@ -1,70 +1,80 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"strings"
+	"time"
 )
 
-var urlMap = make(map[string]string)
+var urlMap map[string]string
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
+		http.Error(w, "Метод должен быть POST", http.StatusBadRequest)
 		return
 	}
 
-	// Чтение URL из тела POST-запроса.
-	body, err := ioutil.ReadAll(r.Body)
+	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read URL from request body", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	url := string(body)
+	defer r.Body.Close()
 
-	// Генерация уникального идентификатора (короткого пути) и сохранение URL.
-	id := generateID()
-	urlMap[id] = url
+	link := strings.TrimSpace(string(bodyBytes))
+	if link == "" {
+		http.Error(w, "Пустая ссылка", http.StatusBadRequest)
+		return
+	}
 
-	// Отправка ответа с коротким URL.
+	// Генерируем пять случайных букв для идентификатора
+	id := generateRandomID(5)
+
+	// Формируем сокращенный URL
+	shortURL := fmt.Sprintf("http://localhost:8080/%s", id)
+
+	// Сохраняем сокращенный URL в карту
+	urlMap[id] = link
+
+	// Возвращаем сокращенный URL как ответ с кодом 201
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	_, _ = w.Write([]byte(id))
+	w.Write([]byte(shortURL))
 }
 
-func generateID() string {
-	// Здесь может быть логика для генерации уникального ID,
-	// например, с использованием случайной генерации или хеширования.
-	// В данном примере, используется фиксированный ID.
-	return "EwHXdJfB"
-}
-
-func GetHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
+func redirect(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/")
+	originalURL, ok := urlMap[id]
+	if !ok {
+		http.Error(w, "Несуществующий идентификатор", http.StatusBadRequest)
 		return
 	}
 
-	// Извлечение идентификатора из URL.
-	id := r.URL.Path[1:] // Удаление первого символа "/", чтобы получить идентификатор.
-
-	// Поиск URL по идентификатору в карту urlMap.
-	url, exists := urlMap[id]
-	if !exists {
-		http.NotFound(w, r)
-		return
-	}
-
-	// Отправка ответа с перенаправлением и оригинальным URL в заголовке Location.
-	w.Header().Set("Location", url)
+	// Выполняем перенаправление на оригинальный URL с кодом 307
+	w.Header().Set("Location", originalURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc(`/`, mainPage)
-	mux.HandleFunc(`/EwHXdJfB`, GetHandler)
+func generateRandomID(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	result := make([]byte, length)
+	for i := 0; i < length; i++ {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(result)
+}
 
-	err := http.ListenAndServe(`:8080`, mux)
+func main() {
+	urlMap = make(map[string]string)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/shorten", mainPage)
+	mux.HandleFunc("/", redirect)
+
+	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		panic(err)
 	}
