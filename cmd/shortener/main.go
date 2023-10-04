@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 )
 
 var (
@@ -66,7 +65,6 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 
 func generateRandomID(length int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	rand.Seed(time.Now().UnixNano())
 	result := make([]byte, length)
 	for i := 0; i < length; i++ {
 		result[i] = chars[rand.Intn(len(chars))]
