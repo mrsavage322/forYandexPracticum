@@ -52,8 +52,7 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Выполняем перенаправление на оригинальный URL с кодом 307
-	w.Header().Set("Location", originalURL)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
 }
 
 func generateRandomID(length int) string {
