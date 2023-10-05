@@ -1,3 +1,3 @@
-module awesomeProject1
+module github.com/mrsavage322/foryandex
 
-go 1.20
+go 1.21.1
