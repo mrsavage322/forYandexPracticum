@@ -15,10 +15,10 @@ var (
 )
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Метод должен быть POST", http.StatusBadRequest)
-		return
-	}
+	//if r.Method != http.MethodPost {
+	//	http.Error(w, "Метод должен быть POST", http.StatusBadRequest)
+	//	return
+	//}
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
