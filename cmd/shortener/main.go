@@ -16,7 +16,7 @@ var (
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Метод должен быть POST", http.StatusBadRequest)
+		//http.Error(w, "Метод должен быть POST", http.StatusBadRequest)
 		return
 	}
 
@@ -75,8 +75,8 @@ func generateRandomID(length int) string {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", mainPage)
 	mux.HandleFunc("/shorten/", redirect)
+	mux.HandleFunc("/", mainPage)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
