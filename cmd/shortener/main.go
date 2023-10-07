@@ -6,25 +6,28 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
-	"sync"
 )
 
-var (
-	urlMap     = make(map[string]string)
-	urlMapLock sync.Mutex
-)
+var urlMap map[string]string
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		//http.Error(w, "Метод должен быть POST", http.StatusBadRequest)
-		return
+	switch r.Method {
+	case http.MethodGet:
+		redirect(w, r)
+	case http.MethodPost:
+		handlePost(w, r)
+	default:
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 	}
+}
 
+func handlePost(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 
 	link := strings.TrimSpace(string(bodyBytes))
 	if link == "" {
@@ -39,9 +42,7 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	shortURL := fmt.Sprintf("http://localhost:8080/%s", id)
 
 	// Сохраняем сокращенный URL в карту
-	urlMapLock.Lock()
 	urlMap[id] = link
-	urlMapLock.Unlock()
 
 	// Возвращаем сокращенный URL как ответ с кодом 201
 	w.Header().Set("Content-Type", "text/plain")
@@ -51,9 +52,7 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 
 func redirect(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/")
-	urlMapLock.Lock()
 	originalURL, ok := urlMap[id]
-	urlMapLock.Unlock()
 	if !ok {
 		http.Error(w, "Несуществующий идентификатор", http.StatusBadRequest)
 		return
@@ -74,10 +73,10 @@ func generateRandomID(length int) string {
 }
 
 func main() {
+	urlMap = make(map[string]string)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/shorten/", redirect)
-	mux.HandleFunc("/", mainPage)
-
+	mux.HandleFunc("/shorten", mainPage)
+	mux.HandleFunc("/", mainPage) // Обработка GET и POST запросов на /
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		panic(err)
