@@ -17,7 +17,7 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		handlePost(w, r)
 	default:
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -31,20 +31,14 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 
 	link := strings.TrimSpace(string(bodyBytes))
 	if link == "" {
-		http.Error(w, "Пустая ссылка", http.StatusBadRequest)
+		http.Error(w, "Empty link", http.StatusBadRequest)
 		return
 	}
 
-	// Генерируем пять случайных букв для идентификатора
 	id := generateRandomID(5)
-
-	// Формируем сокращенный URL
 	shortURL := fmt.Sprintf("http://localhost:8080/%s", id)
-
-	// Сохраняем сокращенный URL в карту
 	urlMap[id] = link
 
-	// Возвращаем сокращенный URL как ответ с кодом 201
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))
@@ -54,7 +48,7 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/")
 	originalURL, ok := urlMap[id]
 	if !ok {
-		http.Error(w, "Несуществующий идентификатор", http.StatusBadRequest)
+		http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 		return
 	}
 
@@ -75,8 +69,7 @@ func generateRandomID(length int) string {
 func main() {
 	urlMap = make(map[string]string)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/shorten", mainPage)
-	mux.HandleFunc("/", mainPage) // Обработка GET и POST запросов на /
+	mux.HandleFunc("/", mainPage)
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		panic(err)
