@@ -75,7 +75,6 @@ func generateRandomID(length int) string {
 func main() {
 	urlMap = make(map[string]string)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/shorten", mainPage)
 	mux.HandleFunc("/", mainPage) // Обработка GET и POST запросов на /
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
