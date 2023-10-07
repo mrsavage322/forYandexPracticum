@@ -52,11 +52,11 @@ func TestMainPageHandler(t *testing.T) {
 				// Сначала добавим короткий URL
 				id := generateRandomID(5)
 				urlMap[id] = "https://example.com"
-
 				request := httptest.NewRequest(test.method, test.request, nil)
 				response = httptest.NewRecorder().Result()
 				redirect(httptest.NewRecorder(), request)
 			}
+			defer response.Body.Close()
 
 			require.NoError(t, err) // Используем err
 
