@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"math/rand"
 	"net/http"
@@ -45,7 +46,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func redirect(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/")
+	id := chi.URLParam(r, "id")
 	originalURL, ok := urlMap[id]
 	if !ok {
 		http.Error(w, "Non-existent identifier", http.StatusBadRequest)
@@ -68,9 +69,12 @@ func generateRandomID(length int) string {
 
 func main() {
 	urlMap = make(map[string]string)
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", mainPage)
-	err := http.ListenAndServe(":8080", mux)
+	r := chi.NewRouter()
+
+	r.Get("/", mainPage)
+	r.Post("/", handlePost)
+	r.Get("/{id}", redirect)
+	err := http.ListenAndServe(":8080", r)
 	if err != nil {
 		panic(err)
 	}
