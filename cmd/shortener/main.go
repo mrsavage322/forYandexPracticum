@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"io"
@@ -9,7 +10,11 @@ import (
 	"strings"
 )
 
-var urlMap map[string]string
+var (
+	urlMap     map[string]string
+	serverAddr string
+	baseURL    string
+)
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -69,8 +74,11 @@ func generateRandomID(length int) string {
 
 func main() {
 	urlMap = make(map[string]string)
-	r := chi.NewRouter()
+	flag.StringVar(&serverAddr, "a", "http://localhost:8088", "Address to run the HTTP server")
+	flag.StringVar(&baseURL, "b", "http://localhost:8080/urtsd", "Base URL for shortened links")
+	flag.Parse()
 
+	r := chi.NewRouter()
 	r.Get("/", mainPage)
 	r.Post("/", handlePost)
 	r.Get("/{id}", redirect)
