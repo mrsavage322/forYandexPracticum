@@ -42,7 +42,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := generateRandomID(5)
-	shortURL := fmt.Sprintf("http://localhost:8080/%s", id)
+	shortURL := fmt.Sprintf("%s/%s", baseURL, id)
 	urlMap[id] = link
 
 	w.Header().Set("Content-Type", "text/plain")
@@ -74,7 +74,7 @@ func generateRandomID(length int) string {
 
 func main() {
 	urlMap = make(map[string]string)
-	flag.StringVar(&serverAddr, "a", "http://localhost:8088", "Address to run the HTTP server")
+	flag.StringVar(&serverAddr, "a", "http://localhost:8080", "Address to run the HTTP server")
 	flag.StringVar(&baseURL, "b", "http://localhost:8080/urtsd", "Base URL for shortened links")
 	flag.Parse()
 
@@ -82,7 +82,7 @@ func main() {
 	r.Get("/", mainPage)
 	r.Post("/", handlePost)
 	r.Get("/{id}", redirect)
-	err := http.ListenAndServe(":8080", r)
+	err := http.ListenAndServe(serverAddr, r)
 	if err != nil {
 		panic(err)
 	}
