@@ -74,8 +74,8 @@ func generateRandomID(length int) string {
 
 func main() {
 	urlMap = make(map[string]string)
-	flag.StringVar(&serverAddr, "a", "http://localhost:8080", "Address to run the HTTP server")
-	flag.StringVar(&baseURL, "b", "http://localhost:8080", "Base URL for shortened links")
+	flag.StringVar(&serverAddr, "a", "localhost:8080", "Address to run the HTTP server")
+	flag.StringVar(&baseURL, "b", "http://localhost:8080/ASbcD", "Base URL for shortened links")
 	flag.Parse()
 
 	r := chi.NewRouter()
