@@ -19,8 +19,8 @@ var (
 )
 
 type Config struct {
-	serverAddr string `env:"SERVER_ADDRESS"`
-	baseURL    string `env:"BASE_URL"`
+	ServerAddr string `env:"SERVER_ADDRESS"`
+	BaseURL    string `env:"BASE_URL"`
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
@@ -82,15 +82,18 @@ func generateRandomID(length int) string {
 func main() {
 	urlMap = make(map[string]string)
 
-	var cfg Config
-	er := env.Parse(&cfg)
-	if er != nil {
-		log.Fatal(er)
-	}
-
 	flag.StringVar(&serverAddr, "a", "localhost:8080", "Address to run the HTTP server")
 	flag.StringVar(&baseURL, "b", "http://localhost:8080", "Base URL for shortened links")
 	flag.Parse()
+
+	var cfg Config
+	er := env.Parse(&cfg)
+	if er != nil {
+		log.Print(er)
+	} else {
+		serverAddr = cfg.ServerAddr
+		baseURL = cfg.BaseURL
+	}
 
 	r := chi.NewRouter()
 	r.Get("/", mainPage)
