@@ -23,16 +23,16 @@ type Config struct {
 	BaseURL    string `env:"BASE_URL"`
 }
 
-func mainPage(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		redirect(w, r)
-	case http.MethodPost:
-		handlePost(w, r)
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
+//func mainPage(w http.ResponseWriter, r *http.Request) {
+//	switch r.Method {
+//	case http.MethodGet:
+//		redirect(w, r)
+//	case http.MethodPost:
+//		handlePost(w, r)
+//	default:
+//		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+//	}
+//}
 
 func handlePost(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
@@ -96,9 +96,12 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Get("/", mainPage)
-	r.Post("/", handlePost)
+	r.Get("/", redirect)
 	r.Get("/{id}", redirect)
+	r.Post("/", handlePost)
+	//r.Get("/", redirect)
+	//r.Post("/", handlePost)
+	//r.Get("/{id}", redirect)
 	err := http.ListenAndServe(serverAddr, r)
 	if err != nil {
 		panic(err)
