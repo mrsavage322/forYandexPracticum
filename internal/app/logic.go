@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	UrlMap     map[string]string
+	URLMap     map[string]string
 	ServerAddr string
 	BaseURL    string
 )
@@ -38,7 +38,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 
 	id := GenerateRandomID(5)
 	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
-	UrlMap[id] = link
+	URLMap[id] = link
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
@@ -47,7 +47,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	originalURL, ok := UrlMap[id]
+	originalURL, ok := URLMap[id]
 	if !ok {
 		http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 		return

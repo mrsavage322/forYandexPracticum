@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	app.UrlMap = make(map[string]string)
+	app.URLMap = make(map[string]string)
 	app.SetFlags()
 	app.SetConfig()
 

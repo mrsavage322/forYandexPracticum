@@ -35,7 +35,7 @@ func TestHandler(t *testing.T) {
 		},
 	}
 
-	app.UrlMap = make(map[string]string)
+	app.URLMap = make(map[string]string)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestHandler(t *testing.T) {
 			} else if test.method == http.MethodGet {
 				// Сначала добавим короткий URL
 				id := app.GenerateRandomID(5)
-				app.UrlMap[id] = "https://example.com"
+				app.URLMap[id] = "https://example.com"
 				request := httptest.NewRequest(test.method, test.request, nil)
 				response = httptest.NewRecorder().Result()
 				app.Redirect(httptest.NewRecorder(), request)
