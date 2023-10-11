@@ -1,16 +1,15 @@
 package main
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestMainPageHandler(t *testing.T) {
+func TestHandler(t *testing.T) {
 	tests := []struct {
 		name                   string
 		method                 string
@@ -40,13 +39,12 @@ func TestMainPageHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var response *http.Response
-			var err error // Объявляем переменную err
+			var err error
 
 			if test.method == http.MethodPost {
 				request := httptest.NewRequest(test.method, test.request, strings.NewReader(test.body))
-				// Используйте тот же recorder для записи ответа
 				recorder := httptest.NewRecorder()
-				mainPage(recorder, request)
+				handlePost(recorder, request)
 				response = recorder.Result()
 			} else if test.method == http.MethodGet {
 				// Сначала добавим короткий URL
