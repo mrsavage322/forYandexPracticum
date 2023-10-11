@@ -6,7 +6,6 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -77,11 +76,13 @@ func main() {
 
 	var cfg Config
 	er := env.Parse(&cfg)
-	if er != nil {
-		log.Print(er)
-	} else {
-		serverAddr = cfg.ServerAddr
-		baseURL = cfg.BaseURL
+	if er == nil {
+		if cfg.ServerAddr != "" {
+			serverAddr = cfg.ServerAddr
+		}
+		if cfg.BaseURL != "" {
+			baseURL = cfg.BaseURL
+		}
 	}
 
 	r := chi.NewRouter()
