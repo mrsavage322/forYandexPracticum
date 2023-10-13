@@ -36,7 +36,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := GenerateRandomID(5)
+	id := generateRandomID(5)
 	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
 	URLMap[id] = link
 
@@ -58,7 +58,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func GenerateRandomID(length int) string {
+func generateRandomID(length int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	result := make([]byte, length)
 	for i := 0; i < length; i++ {
