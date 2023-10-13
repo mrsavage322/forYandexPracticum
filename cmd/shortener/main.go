@@ -28,11 +28,11 @@ func main() {
 	}
 
 	// Создаем канал для сигналов завершения
-	Quit := make(chan os.Signal, 1)
-	signal.Notify(Quit, syscall.SIGINT, syscall.SIGTERM)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		<-Quit
+		<-quit
 
 		log.Println("Server is shutting down...")
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
