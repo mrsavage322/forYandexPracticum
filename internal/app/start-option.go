@@ -7,10 +7,9 @@ import (
 )
 
 var (
-	URLMap     map[string]string
 	ServerAddr string
 	BaseURL    string
-	URLStore   storage.URLStorage
+	URLMap     storage.URLStorage
 )
 
 type Config struct {

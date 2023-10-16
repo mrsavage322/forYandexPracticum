@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	app.URLStore = storage.NewURLMapStorage()
+	app.URLMap = storage.NewURLMapStorage()
 	app.SetFlags()
 	app.SetConfig()
 
