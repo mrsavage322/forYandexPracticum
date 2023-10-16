@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/mrsavage322/foryandex/internal/app"
+	"github.com/mrsavage322/foryandex/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -35,12 +36,12 @@ func TestHandler(t *testing.T) {
 		},
 	}
 
-	app.URLMap = make(map[string]string)
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var response *http.Response
 			var err error
+
+			app.URLMap = storage.NewURLMapStorage()
 
 			if test.method == http.MethodPost {
 				request := httptest.NewRequest(test.method, test.request, strings.NewReader(test.body))
@@ -50,7 +51,7 @@ func TestHandler(t *testing.T) {
 			} else if test.method == http.MethodGet {
 				// Сначала добавим короткий URL
 				id := app.GenerateRandomID(5)
-				app.URLMap[id] = "https://example.com"
+				app.URLMap.Set(id, "https://example.com")
 				request := httptest.NewRequest(test.method, test.request, nil)
 				response = httptest.NewRecorder().Result()
 				app.Redirect(httptest.NewRecorder(), request)
