@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/mrsavage322/foryandex/internal/app"
+	"github.com/mrsavage322/foryandex/internal/storage"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +14,7 @@ import (
 )
 
 func main() {
-	app.URLMap = make(map[string]string)
+	app.URLStore = storage.NewURLMapStorage()
 	app.SetFlags()
 	app.SetConfig()
 
