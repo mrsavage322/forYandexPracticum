@@ -1,7 +1,9 @@
 package app
 
 import (
+	"bytes"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"time"
 )
@@ -24,6 +26,13 @@ func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		responseWriter := NewStatusSizeLoggingResponseWriter(w)
+
+		bodyCopy := new(bytes.Buffer)
+		if r.Body != nil {
+			_, _ = io.Copy(responseWriter, io.TeeReader(r.Body, bodyCopy))
+		}
+		r.Body = io.NopCloser(bodyCopy)
+
 		next.ServeHTTP(w, r)
 		elapsed := time.Since(startTime)
 
