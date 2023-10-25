@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-
 	"io"
 	"math/rand"
 	"net/http"
@@ -29,6 +28,9 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))
+	//sugar.Infof("Status: %s", http.StatusCreated)
+	//sugar.Infof("Response sent", zap.Int("StatusCode", http.StatusCreated), zap.Int("ContentLength", len(shortURL)))
+
 }
 
 func GenerateRandomID(length int) string {

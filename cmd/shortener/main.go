@@ -17,8 +17,10 @@ func main() {
 	app.URLMap = storage.NewURLMapStorage()
 	app.SetFlags()
 	app.SetConfig()
+	app.InitializeLogger()
 
 	r := chi.NewRouter()
+	r.Use(app.LogRequest)
 	r.Get("/", app.Redirect)
 	r.Get("/{id}", app.Redirect)
 	r.Post("/", app.HandlePost)

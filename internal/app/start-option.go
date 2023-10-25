@@ -10,6 +10,7 @@ var (
 	ServerAddr string
 	BaseURL    string
 	URLMap     storage.URLStorage
+	//Logger     *zap.Logger
 )
 
 type Config struct {
