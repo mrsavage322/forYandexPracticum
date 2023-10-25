@@ -1,22 +1,28 @@
 package app
 
 import (
+	"bytes"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"time"
 )
 
-var sugarLogger *zap.SugaredLogger
-var logger *zap.Logger
+// var sugarLogger *zap.SugaredLogger
+// var logger *zap.Logger
+var requestLogger *zap.SugaredLogger
+var responseLogger *zap.SugaredLogger
 
 func InitializeLogger() {
 	var err error
-	logger, err = zap.NewDevelopment()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic("cannot initialize zap logger: " + err.Error())
 	}
 	defer logger.Sync()
-	sugarLogger = logger.Sugar()
+
+	requestLogger = logger.Sugar().Named("Request")
+	responseLogger = logger.Sugar().Named("Response")
 }
 
 // LogRequest логирует информацию о запросе.
@@ -25,21 +31,28 @@ func LogRequest(next http.Handler) http.Handler {
 		startTime := time.Now()
 		responseWriter := NewStatusSizeLoggingResponseWriter(w)
 
-		//bodyCopy := new(bytes.Buffer)
-		//if r.Body != nil {
-		//	_, _ = io.Copy(responseWriter, io.TeeReader(r.Body, bodyCopy))
-		//}
-		//r.Body = io.NopCloser(bodyCopy)
+		var requestBody []byte
+		if r.Body != nil {
+			requestBody, _ = io.ReadAll(r.Body)
+			r.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+		}
 
 		next.ServeHTTP(w, r)
 		elapsed := time.Since(startTime)
 
-		sugarLogger.Infow("Request",
+		requestLogger.Infow("Request",
 			"URL", r.URL,
 			"Status", responseWriter.Status(),
 			"Method", r.Method,
 			"Size", responseWriter.Size(),
+			"RequestBody", string(requestBody),
 			"Elapsed", elapsed,
+		)
+
+		responseLogger.Infow("Response",
+			"URL", r.URL, // Если необходимо логировать URL
+			"Status", http.StatusCreated,
+			"Size", len(shortURL), // Размер ответа
 		)
 	})
 }
