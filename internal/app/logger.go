@@ -42,7 +42,6 @@ func InitializeLogger() {
 	sugar = *logger.Sugar()
 }
 
-// LogRequest логирует информацию о запросе.
 func LogRequest(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
