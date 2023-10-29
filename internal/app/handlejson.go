@@ -18,6 +18,11 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var req Request
 	err := decoder.Decode(&req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	id := GenerateRandomID(5)
 	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
 
