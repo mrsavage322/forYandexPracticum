@@ -24,6 +24,7 @@ func main() {
 	r.Get("/", app.Redirect)
 	r.Get("/{id}", app.Redirect)
 	r.Post("/", app.HandlePost)
+	r.Post("/api/shorten", app.HandleJSON)
 
 	srv := &http.Server{
 		Addr:    app.ServerAddr,

@@ -19,6 +19,7 @@ func TestHandler(t *testing.T) {
 		body                   string
 		expectedStatusCode     int
 		expectedLocationHeader string
+		expectedResponseBody   string
 	}{
 		{
 			name:               "POST request with a valid link",
@@ -34,6 +35,22 @@ func TestHandler(t *testing.T) {
 			body:               "",
 			expectedStatusCode: http.StatusBadRequest,
 		},
+		{
+			name:                 "JSON POST request with a valid link",
+			method:               http.MethodPost,
+			request:              "/api/shorten",
+			body:                 `{"url": "https://example.com"}`,
+			expectedStatusCode:   http.StatusCreated,
+			expectedResponseBody: `{"result": "YourShortURLLogicHere"}`,
+		},
+		{
+			name:                 "JSON POST request with an empty link",
+			method:               http.MethodPost,
+			request:              "/api/shorten",
+			body:                 ``,
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: "",
+		},
 	}
 
 	for _, test := range tests {
@@ -47,6 +64,7 @@ func TestHandler(t *testing.T) {
 				request := httptest.NewRequest(test.method, test.request, strings.NewReader(test.body))
 				recorder := httptest.NewRecorder()
 				app.HandlePost(recorder, request)
+				app.HandleJSON(recorder, request)
 				response = recorder.Result()
 			} else if test.method == http.MethodGet {
 				// Сначала добавим короткий URL
@@ -58,7 +76,7 @@ func TestHandler(t *testing.T) {
 			}
 			defer response.Body.Close()
 
-			require.NoError(t, err) // Используем err
+			require.NoError(t, err)
 
 			assert.Equal(t, test.expectedStatusCode, response.StatusCode)
 
