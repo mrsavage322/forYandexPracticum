@@ -23,12 +23,19 @@ func isGzipSupported(r *http.Request) bool {
 func GzipMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if isGzipSupported(r) {
-			w.Header().Set("Content-Encoding", "gzip")
-			gz := gzip.NewWriter(w)
-			defer gz.Close()
-			next.ServeHTTP(GzipResponseWriter{ResponseWriter: w, Writer: gz}, r)
-		} else {
-			next.ServeHTTP(w, r)
+			// Если клиент поддерживает Gzip сжатие, то попробуем декодировать данные, если они сжаты.
+			contentEncoding := r.Header.Get("Content-Encoding")
+			if strings.Contains(contentEncoding, "gzip") {
+				reader, err := gzip.NewReader(r.Body)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				defer reader.Close()
+				r.Body = http.MaxBytesReader(w, reader, 1048576) // Максимальный размер в 1 МБ
+			}
 		}
+
+		next.ServeHTTP(w, r)
 	})
 }
