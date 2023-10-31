@@ -13,9 +13,9 @@ import (
 )
 
 func main() {
-	app.URLMap = app.NewURLMapStorage()
 	app.SetFlags()
 	app.SetConfig()
+	app.URLMap = app.NewURLMapStorage()
 	app.InitializeLogger()
 
 	r := chi.NewRouter()

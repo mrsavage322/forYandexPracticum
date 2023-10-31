@@ -68,9 +68,9 @@ func (s *URLMapStorage) SaveToFile() error {
 	i := 1
 	for key, value := range s.data {
 		urlData := URLData{
-			UUID:        strconv.Itoa(i), // Преобразуем целое число в строку
+			UUID:        strconv.Itoa(i),
 			ShortURL:    key,
-			OriginalURL: value, // Ваш код устанавливает OriginalURL равным ShortURL
+			OriginalURL: value,
 		}
 		err := encoder.Encode(urlData)
 		if err != nil {
