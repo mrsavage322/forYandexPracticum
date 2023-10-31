@@ -3,19 +3,19 @@ package app
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
-	"github.com/mrsavage322/foryandex/internal/storage"
 )
 
 var (
 	ServerAddr string
 	BaseURL    string
-	URLMap     storage.URLStorage
-	//Logger     *zap.Logger
+	URLMap     URLStorage
+	FilePATH   string
 )
 
 type Config struct {
 	ServerAddr string `env:"SERVER_ADDRESS"`
 	BaseURL    string `env:"BASE_URL"`
+	FilePATH   string `env:"FILE_STORAGE_PATH"`
 }
 
 func SetConfig() {
@@ -28,11 +28,15 @@ func SetConfig() {
 		if cfg.BaseURL != "" {
 			BaseURL = cfg.BaseURL
 		}
+		if cfg.FilePATH != "" {
+			FilePATH = cfg.FilePATH
+		}
 	}
 }
 
 func SetFlags() {
 	flag.StringVar(&ServerAddr, "a", "localhost:8080", "Address to run the HTTP server")
 	flag.StringVar(&BaseURL, "b", "http://localhost:8080", "Base URL for shortened links")
+	flag.StringVar(&FilePATH, "f", "/tmp/short-url-db.json", "Full path to the storage file")
 	flag.Parse()
 }

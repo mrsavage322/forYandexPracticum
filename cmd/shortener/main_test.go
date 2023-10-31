@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/mrsavage322/foryandex/internal/app"
-	"github.com/mrsavage322/foryandex/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -58,7 +57,7 @@ func TestHandler(t *testing.T) {
 			var response *http.Response
 			var err error
 
-			app.URLMap = storage.NewURLMapStorage()
+			app.URLMap = app.NewURLMapStorage()
 
 			if test.method == http.MethodPost {
 				request := httptest.NewRequest(test.method, test.request, strings.NewReader(test.body))

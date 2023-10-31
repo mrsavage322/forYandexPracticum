@@ -1,9 +1,8 @@
-package storage
+package app
 
 import (
 	"encoding/json"
 	"io"
-	_ "io/ioutil"
 	"os"
 	"strconv"
 )
@@ -35,7 +34,9 @@ type SetURL interface {
 
 func (s *URLMapStorage) Set(key, value string) {
 	s.data[key] = value
-	s.SaveToFile()
+	if FilePATH != "" {
+		s.SaveToFile()
+	}
 }
 
 type URLMapStorage struct {
@@ -45,6 +46,9 @@ type URLMapStorage struct {
 
 func NewURLMapStorage() URLStorage {
 	filename := "/tmp/short-url-db.json"
+	if FilePATH != "" {
+		filename = FilePATH
+	}
 	data := make(map[string]string)
 	loadDataFromFile(filename, &data)
 	return &URLMapStorage{
