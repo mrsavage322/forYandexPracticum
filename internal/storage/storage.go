@@ -2,7 +2,10 @@ package storage
 
 import (
 	"encoding/json"
+	"io"
+	_ "io/ioutil"
 	"os"
+	"strconv"
 )
 
 type URLStorage interface {
@@ -51,22 +54,42 @@ func NewURLMapStorage() URLStorage {
 }
 
 func (s *URLMapStorage) SaveToFile() error {
-	data, err := json.Marshal(s.data)
+	file, err := os.OpenFile(s.filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(s.filename, data, 0644)
-	if err != nil {
-		return err
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	i := 1
+	for key, value := range s.data {
+		urlData := URLData{
+			UUID:        strconv.Itoa(i), // Преобразуем целое число в строку
+			ShortURL:    key,
+			OriginalURL: value, // Ваш код устанавливает OriginalURL равным ShortURL
+		}
+		err := encoder.Encode(urlData)
+		if err != nil {
+			return err
+		}
+		i++
 	}
+
 	return nil
 }
 
 func loadDataFromFile(filename string, data *map[string]string) {
-	content, err := os.ReadFile(filename)
+	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return
 	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return
+	}
+
 	err = json.Unmarshal(content, data)
 	if err != nil {
 		return
