@@ -13,8 +13,8 @@ import (
 )
 
 func main() {
-	app.SetConfig()
 	app.SetFlags()
+	app.SetConfig()
 	app.URLMap = app.NewURLMapStorage()
 	app.InitializeLogger()
 
