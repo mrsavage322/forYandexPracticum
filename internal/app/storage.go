@@ -45,7 +45,7 @@ type URLMapStorage struct {
 }
 
 func NewURLMapStorage() URLStorage {
-	filename := "/tmp/short-url-db.json"
+	filename := ""
 	if FilePATH != "" {
 		filename = FilePATH
 	}
