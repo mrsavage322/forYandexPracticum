@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+const DefaultFilePath = "/tmp/short-url-db.json"
+
 type URLStorage interface {
 	SetURL
 	GetURL
@@ -44,21 +46,23 @@ type URLMapStorage struct {
 	filename string
 }
 
-func NewURLMapStorage() URLStorage {
-	filename := "/tmp/short-url-db.json"
+func NewURLMapStorage() (URLStorage, error) {
+	filename := DefaultFilePath
 	if FilePATH != "" {
 		filename = FilePATH
 	}
-	data := make(map[string]string)
-	loadDataFromFile(filename, &data)
+	data, err := loadDataFromFile(filename)
+	if err != nil {
+		return nil, err
+	}
 	return &URLMapStorage{
 		data:     data,
 		filename: filename,
-	}
+	}, nil
 }
 
 func (s *URLMapStorage) SaveToFile() error {
-	file, err := os.OpenFile(s.filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(s.filename, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return err
 	}
@@ -82,20 +86,23 @@ func (s *URLMapStorage) SaveToFile() error {
 	return nil
 }
 
-func loadDataFromFile(filename string, data *map[string]string) {
+func loadDataFromFile(filename string) (map[string]string, error) {
+	data := make(map[string]string)
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		return
+		return data, err
 	}
 	defer file.Close()
 
 	content, err := io.ReadAll(file)
 	if err != nil {
-		return
+		return data, err
 	}
 
-	err = json.Unmarshal(content, data)
+	err = json.Unmarshal(content, &data)
 	if err != nil {
-		return
+		return data, err
 	}
+
+	return data, nil
 }
