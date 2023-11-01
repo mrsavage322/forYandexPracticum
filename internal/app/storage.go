@@ -46,23 +46,21 @@ type URLMapStorage struct {
 	filename string
 }
 
-func NewURLMapStorage() (URLStorage, error) {
+func NewURLMapStorage() URLStorage {
 	filename := DefaultFilePath
 	if FilePATH != "" {
 		filename = FilePATH
 	}
-	data, err := loadDataFromFile(filename)
-	if err != nil {
-		return nil, err
-	}
+	data := make(map[string]string)
+	loadDataFromFile(filename, &data)
 	return &URLMapStorage{
 		data:     data,
 		filename: filename,
-	}, nil
+	}
 }
 
 func (s *URLMapStorage) SaveToFile() error {
-	file, err := os.OpenFile(s.filename, os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(s.filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err
 	}
@@ -86,23 +84,20 @@ func (s *URLMapStorage) SaveToFile() error {
 	return nil
 }
 
-func loadDataFromFile(filename string) (map[string]string, error) {
-	data := make(map[string]string)
+func loadDataFromFile(filename string, data *map[string]string) {
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		return data, err
+		return
 	}
 	defer file.Close()
 
 	content, err := io.ReadAll(file)
 	if err != nil {
-		return data, err
+		return
 	}
 
-	err = json.Unmarshal(content, &data)
+	err = json.Unmarshal(content, data)
 	if err != nil {
-		return data, err
+		return
 	}
-
-	return data, nil
 }
