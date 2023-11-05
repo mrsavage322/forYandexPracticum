@@ -9,6 +9,8 @@ import (
 
 const DefaultFilePath = "/tmp/short-url-db.json"
 
+var filename, data = DefaultFilePath, make(map[string]string)
+
 type URLStorage interface {
 	SetURL
 	GetURL
@@ -47,12 +49,12 @@ type URLMapStorage struct {
 }
 
 func NewURLMapStorage() URLStorage {
-	filename := DefaultFilePath
+	//filename := DefaultFilePath
 	if FilePATH != "" {
 		filename = FilePATH
 	}
-	data := make(map[string]string)
-	loadDataFromFile(filename, &data)
+	//data := make(map[string]string)
+	loadDataFromFile(filename)
 	return &URLMapStorage{
 		data:     data,
 		filename: filename,
@@ -84,20 +86,21 @@ func (s *URLMapStorage) SaveToFile() error {
 	return nil
 }
 
-func loadDataFromFile(filename string, data *map[string]string) {
+func loadDataFromFile(filename string) map[string]string {
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		return
+		return nil
 	}
 	defer file.Close()
 
 	content, err := io.ReadAll(file)
 	if err != nil {
-		return
+		return nil
 	}
 
-	err = json.Unmarshal(content, data)
+	err = json.Unmarshal(content, &data)
 	if err != nil {
-		return
+		return nil
 	}
+	return nil
 }
