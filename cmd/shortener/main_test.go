@@ -66,7 +66,6 @@ func TestHandler(t *testing.T) {
 				app.HandleJSON(recorder, request)
 				response = recorder.Result()
 			} else if test.method == http.MethodGet {
-				// Сначала добавим короткий URL
 				id := app.GenerateRandomID(5)
 				app.URLMap.Set(id, "https://example.com")
 				request := httptest.NewRequest(test.method, test.request, nil)
