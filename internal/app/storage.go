@@ -49,11 +49,9 @@ type URLMapStorage struct {
 }
 
 func NewURLMapStorage() URLStorage {
-	//filename := DefaultFilePath
 	if FilePATH != "" {
 		filename = FilePATH
 	}
-	//data := make(map[string]string)
 	loadDataFromFile(filename)
 	return &URLMapStorage{
 		data:     data,

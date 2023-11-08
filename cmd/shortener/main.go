@@ -21,6 +21,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(app.LogRequest)
 	r.Use(app.GzipMiddleware)
+	r.Get("/ping", app.Redirect)
 	r.Get("/", app.Redirect)
 	r.Get("/{id}", app.Redirect)
 	r.Post("/", app.HandlePost)
