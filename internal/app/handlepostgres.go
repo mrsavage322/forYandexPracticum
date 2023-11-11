@@ -15,21 +15,17 @@ func BDConnection(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sql.Open("pgx", Database)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return
 	}
 	defer db.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	if err = db.PingContext(ctx); err != nil {
-		http.Error(w, "Non-existent identifier", http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusOK)
+		http.Error(w, "Failed to connect to the database", http.StatusInternalServerError)
+		return
 	}
 
-	//err = db.Ping()
-	//if err != nil {
-	//	log.Fatal("Ошибка при попытке установить соединение:", err)
-	//}
-	//fmt.Println("Соединение установлено успешно!")
+	w.WriteHeader(http.StatusOK)
 }
