@@ -44,6 +44,6 @@ func SetFlags() {
 	flag.StringVar(&ServerAddr, "a", "localhost:8080", "Address to run the HTTP server")
 	flag.StringVar(&BaseURL, "b", "http://localhost:8080", "Base URL for shortened links")
 	flag.StringVar(&FilePATH, "f", "/tmp/short-url-db.json", "Full path to the storage file")
-	flag.StringVar(&DatabaseAddr, "d", "", "Address to connect with Database")
+	flag.StringVar(&DatabaseAddr, "d", "postgres://videos:userpassword@localhost:5432/videos", "Address to connect with Database")
 	flag.Parse()
 }

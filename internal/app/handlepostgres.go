@@ -9,8 +9,7 @@ import (
 )
 
 func BDConnection(w http.ResponseWriter, r *http.Request) {
-	urlExample := "postgres://videos:userpassword@localhost:5432/videos"
-	conn, err := pgx.Connect(context.Background(), urlExample)
+	conn, err := pgx.Connect(context.Background(), DatabaseAddr)
 	if err != nil {
 		fmt.Println("Database connection error:", err)
 		http.Error(w, "Database connection error", http.StatusInternalServerError)
