@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/mrsavage322/foryandex/internal/app"
-	"github.com/mrsavage322/foryandex/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -19,6 +18,7 @@ func TestHandler(t *testing.T) {
 		body                   string
 		expectedStatusCode     int
 		expectedLocationHeader string
+		expectedResponseBody   string
 	}{
 		{
 			name:               "POST request with a valid link",
@@ -34,6 +34,22 @@ func TestHandler(t *testing.T) {
 			body:               "",
 			expectedStatusCode: http.StatusBadRequest,
 		},
+		{
+			name:                 "JSON POST request with a valid link",
+			method:               http.MethodPost,
+			request:              "/api/shorten",
+			body:                 `{"url": "https://example.com"}`,
+			expectedStatusCode:   http.StatusCreated,
+			expectedResponseBody: `{"result": "YourShortURLLogicHere"}`,
+		},
+		{
+			name:                 "JSON POST request with an empty link",
+			method:               http.MethodPost,
+			request:              "/api/shorten",
+			body:                 ``,
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedResponseBody: "",
+		},
 	}
 
 	for _, test := range tests {
@@ -41,15 +57,15 @@ func TestHandler(t *testing.T) {
 			var response *http.Response
 			var err error
 
-			app.URLMap = storage.NewURLMapStorage()
+			app.URLMap = app.NewURLMapStorage()
 
 			if test.method == http.MethodPost {
 				request := httptest.NewRequest(test.method, test.request, strings.NewReader(test.body))
 				recorder := httptest.NewRecorder()
 				app.HandlePost(recorder, request)
+				app.HandleJSON(recorder, request)
 				response = recorder.Result()
 			} else if test.method == http.MethodGet {
-				// Сначала добавим короткий URL
 				id := app.GenerateRandomID(5)
 				app.URLMap.Set(id, "https://example.com")
 				request := httptest.NewRequest(test.method, test.request, nil)
@@ -58,7 +74,7 @@ func TestHandler(t *testing.T) {
 			}
 			defer response.Body.Close()
 
-			require.NoError(t, err) // Используем err
+			require.NoError(t, err)
 
 			assert.Equal(t, test.expectedStatusCode, response.StatusCode)
 

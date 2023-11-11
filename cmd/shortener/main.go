@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/mrsavage322/foryandex/internal/app"
-	"github.com/mrsavage322/foryandex/internal/storage"
 	"log"
 	"net/http"
 	"os"
@@ -14,14 +13,18 @@ import (
 )
 
 func main() {
-	app.URLMap = storage.NewURLMapStorage()
 	app.SetFlags()
 	app.SetConfig()
+	app.URLMap = app.NewURLMapStorage()
+	app.InitializeLogger()
 
 	r := chi.NewRouter()
+	r.Use(app.LogRequest)
+	r.Use(app.GzipMiddleware)
 	r.Get("/", app.Redirect)
 	r.Get("/{id}", app.Redirect)
 	r.Post("/", app.HandlePost)
+	r.Post("/api/shorten", app.HandleJSON)
 
 	srv := &http.Server{
 		Addr:    app.ServerAddr,
