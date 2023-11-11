@@ -3,7 +3,6 @@ package app
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
-	_ "github.com/jackc/pgx/v5"
 )
 
 var (
