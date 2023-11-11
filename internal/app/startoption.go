@@ -7,18 +7,18 @@ import (
 )
 
 var (
-	ServerAddr string
-	BaseURL    string
-	URLMap     URLStorage
-	FilePATH   string
-	Database   string
+	ServerAddr   string
+	BaseURL      string
+	URLMap       URLStorage
+	FilePATH     string
+	DatabaseAddr string
 )
 
 type Config struct {
-	ServerAddr string `env:"SERVER_ADDRESS"`
-	BaseURL    string `env:"BASE_URL"`
-	FilePATH   string `env:"FILE_STORAGE_PATH"`
-	Database   string `env:"DATABASE_DSN"`
+	ServerAddr   string `env:"SERVER_ADDRESS"`
+	BaseURL      string `env:"BASE_URL"`
+	FilePATH     string `env:"FILE_STORAGE_PATH"`
+	DatabaseAddr string `env:"DATABASE_DSN"`
 }
 
 func SetConfig() {
@@ -34,8 +34,8 @@ func SetConfig() {
 		if cfg.FilePATH != "" {
 			FilePATH = cfg.FilePATH
 		}
-		if cfg.Database != "" {
-			Database = cfg.Database
+		if cfg.DatabaseAddr != "" {
+			DatabaseAddr = cfg.DatabaseAddr
 		}
 	}
 }
@@ -44,6 +44,6 @@ func SetFlags() {
 	flag.StringVar(&ServerAddr, "a", "localhost:8080", "Address to run the HTTP server")
 	flag.StringVar(&BaseURL, "b", "http://localhost:8080", "Base URL for shortened links")
 	flag.StringVar(&FilePATH, "f", "/tmp/short-url-db.json", "Full path to the storage file")
-	flag.StringVar(&Database, "d", "host='localhost' user='videos' password='userpassword' dbname='videos'", "Address to connect with Database")
+	flag.StringVar(&DatabaseAddr, "d", "localhost", "Address to connect with Database")
 	flag.Parse()
 }

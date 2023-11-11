@@ -10,10 +10,10 @@ import (
 )
 
 func BDConnection(w http.ResponseWriter, r *http.Request) {
-	Database := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
+	ps := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		`localhost`, `videos`, `userpassword`, `videos`)
 
-	db, err := sql.Open("pgx", Database)
+	db, err := sql.Open("pgx", ps)
 	if err != nil {
 		http.Error(w, "Database connection error", http.StatusInternalServerError)
 		return
