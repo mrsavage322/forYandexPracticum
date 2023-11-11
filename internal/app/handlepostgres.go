@@ -20,7 +20,7 @@ func BDConnection(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err = db.PingContext(ctx); err != nil {
 		http.Error(w, "Failed to connect to the database", http.StatusInternalServerError)
