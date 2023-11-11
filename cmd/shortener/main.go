@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/jackc/pgx/v5"
 	"github.com/mrsavage322/foryandex/internal/app"
 	"log"
 	"net/http"
@@ -21,9 +22,9 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(app.LogRequest)
 	r.Use(app.GzipMiddleware)
-	r.Get("/ping", app.Redirect)
 	r.Get("/", app.Redirect)
 	r.Get("/{id}", app.Redirect)
+	r.Get("/ping", app.BDConnection)
 	r.Post("/", app.HandlePost)
 	r.Post("/api/shorten", app.HandleJSON)
 

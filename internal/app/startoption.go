@@ -3,6 +3,7 @@ package app
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
+	_ "github.com/jackc/pgx/v5"
 )
 
 var (
@@ -43,6 +44,6 @@ func SetFlags() {
 	flag.StringVar(&ServerAddr, "a", "localhost:8080", "Address to run the HTTP server")
 	flag.StringVar(&BaseURL, "b", "http://localhost:8080", "Base URL for shortened links")
 	flag.StringVar(&FilePATH, "f", "/tmp/short-url-db.json", "Full path to the storage file")
-	flag.StringVar(&Database, "b", "", "Address to connect with Database")
+	flag.StringVar(&Database, "d", "host='localhost' user='videos' password='userpassword' dbname='videos'", "Address to connect with Database")
 	flag.Parse()
 }
