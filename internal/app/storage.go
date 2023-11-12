@@ -33,7 +33,14 @@ func NewURLDatabase() (URLDatabaseStorage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &URLDatabase{conn: conn}, nil
+
+	db := &URLDatabase{conn: conn}
+	err = db.CreateTableIfNotExists()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func (db *URLDatabase) Set(key, value string) error {
@@ -145,4 +152,15 @@ func loadDataFromFile(filename string) map[string]string {
 		return nil
 	}
 	return nil
+}
+
+func (db *URLDatabase) CreateTableIfNotExists() error {
+	_, err := db.conn.Exec(context.Background(), `
+        CREATE TABLE IF NOT EXISTS url_storage (
+            uuid SERIAL PRIMARY KEY,
+            short_url VARCHAR NOT NULL,
+            original_url TEXT NOT NULL
+        );
+    `)
+	return err
 }
