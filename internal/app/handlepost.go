@@ -24,8 +24,12 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 
 	id := GenerateRandomID(5)
 	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
-	//URLMap.Set(id, link)
-	URLMapDB.Set(link, link)
+	if DatabaseAddr != "" {
+		URLMapDB.Set(shortURL, link)
+	} else {
+		URLMap.Set(id, link)
+	}
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))
