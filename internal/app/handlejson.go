@@ -26,7 +26,7 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 	link := req.URL
 	id := GenerateRandomID(5)
 	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
-	URLMap.Set(id, link)
+	URLMapDB.Set(link, link)
 
 	resp := Response{Result: shortURL}
 	responseData, err := json.Marshal(resp)

@@ -16,6 +16,7 @@ func main() {
 	app.SetFlags()
 	app.SetConfig()
 	app.URLMap = app.NewURLMapStorage()
+	app.URLMapDB = app.NewDBMapStorage()
 	app.InitializeLogger()
 
 	r := chi.NewRouter()

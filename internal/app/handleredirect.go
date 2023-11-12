@@ -7,8 +7,8 @@ import (
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	originalURL, ok := URLMap.Get(id)
-	if !ok {
+	originalURL, ok := URLMapDB.Get(id)
+	if ok == nil {
 		http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 		return
 	}

@@ -1,7 +1,9 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/jackc/pgx/v5"
 	"io"
 	"os"
 	"strconv"
@@ -15,6 +17,37 @@ type URLStorage interface {
 	SetURL
 	GetURL
 	SaveToFile() error
+}
+
+type URLDatabaseStorage interface {
+	Set(key, value string) error
+	Get(key string) (string, error)
+}
+
+type URLDatabase struct {
+	conn *pgx.Conn
+}
+
+func NewURLDatabase() (URLDatabaseStorage, error) {
+	conn, err := pgx.Connect(context.Background(), DatabaseAddr)
+	if err != nil {
+		return nil, err
+	}
+	return &URLDatabase{conn: conn}, nil
+}
+
+func (db *URLDatabase) Set(key, value string) error {
+	_, err := db.conn.Exec(context.Background(), "INSERT INTO url_storage (short_url, original_url) VALUES ($1, $2)", key, value)
+	return err
+}
+
+func (db *URLDatabase) Get(key string) (string, error) {
+	var originalURL string
+	err := db.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+	if err != nil {
+		return "", err
+	}
+	return originalURL, nil
 }
 
 type URLData struct {
@@ -57,6 +90,17 @@ func NewURLMapStorage() URLStorage {
 		data:     data,
 		filename: filename,
 	}
+}
+
+func NewDBMapStorage() URLDatabaseStorage {
+	if DatabaseAddr != "" {
+		db, err := NewURLDatabase()
+		if err != nil {
+			panic(err)
+		}
+		return db
+	}
+	return nil
 }
 
 func (s *URLMapStorage) SaveToFile() error {
