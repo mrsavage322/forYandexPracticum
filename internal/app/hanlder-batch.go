@@ -31,7 +31,7 @@ func HandleBatch(w http.ResponseWriter, r *http.Request) {
 		link := req.OriginURL
 		id := GenerateRandomID(5)
 		shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
-		correlId := req.CorrelID
+		correlationID := req.CorrelID
 
 		if DatabaseAddr != "" {
 			URLMapDB.Set(shortURL, link)
@@ -40,7 +40,7 @@ func HandleBatch(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resp := ResponseBatch{
-			CorrelID: correlId,
+			CorrelID: correlationID,
 			ShortURL: shortURL,
 		}
 		resps = append(resps, resp)
