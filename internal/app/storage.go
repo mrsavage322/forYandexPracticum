@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	_ "fmt"
 	"github.com/jackc/pgx/v5"
 	"io"
 	"os"
@@ -48,7 +49,13 @@ func (db *URLDatabase) Set(key, value string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(context.Background())
+	defer func(tx pgx.Tx, ctx context.Context) {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			sugar.Error(err)
+			return
+		}
+	}(tx, context.Background())
 
 	_, err = tx.Exec(context.Background(), "INSERT INTO url_storage (short_url, original_url) VALUES ($1, $2)", key, value)
 	if err != nil {
@@ -64,7 +71,13 @@ func (db *URLDatabase) Get(key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer tx.Rollback(context.Background())
+	defer func(tx pgx.Tx, ctx context.Context) {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			sugar.Error(err)
+			return
+		}
+	}(tx, context.Background())
 
 	err = tx.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
 	if err != nil {
