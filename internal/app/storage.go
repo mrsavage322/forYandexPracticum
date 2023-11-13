@@ -59,8 +59,18 @@ func (db *URLDatabase) Set(key, value string) error {
 
 func (db *URLDatabase) Get(key string) (string, error) {
 	var originalURL string
-	err := db.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+
+	tx, err := db.conn.Begin(context.Background())
 	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(context.Background())
+
+	err = tx.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+	if err != nil {
+		return "", err
+	}
+	if err := tx.Commit(context.Background()); err != nil {
 		return "", err
 	}
 	return originalURL, nil
