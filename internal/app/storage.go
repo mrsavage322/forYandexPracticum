@@ -44,8 +44,17 @@ func NewURLDatabase() (URLDatabaseStorage, error) {
 }
 
 func (db *URLDatabase) Set(key, value string) error {
-	_, err := db.conn.Exec(context.Background(), "INSERT INTO url_storage (short_url, original_url) VALUES ($1, $2)", key, value)
-	return err
+	tx, err := db.conn.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	_, err = tx.Exec(context.Background(), "INSERT INTO url_storage (short_url, original_url) VALUES ($1, $2)", key, value)
+	if err != nil {
+		return err
+	}
+	return tx.Commit(context.Background())
 }
 
 func (db *URLDatabase) Get(key string) (string, error) {
