@@ -27,6 +27,7 @@ func main() {
 	r.Get("/ping", app.BDConnection)
 	r.Post("/", app.HandlePost)
 	r.Post("/api/shorten", app.HandleJSON)
+	r.Post("/api/shorten/batch", app.HandleBatch)
 
 	srv := &http.Server{
 		Addr:    app.ServerAddr,
