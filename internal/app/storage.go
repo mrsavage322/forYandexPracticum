@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"io"
+	_ "net/http"
 	"os"
 	"strconv"
 )
@@ -94,7 +95,8 @@ func (s *URLDBStorage) Get(key string) (string, bool) {
 func (s *URLDBStorage) Set(key, value string) {
 	_, err := s.conn.Exec(context.Background(), `INSERT INTO url_storage (short_url, original_url)
 		VALUES ($1, $2)
-		ON CONFLICT (original_url) DO NOTHING
+		ON CONFLICT (original_url)
+		DO UPDATE SET original_url = null
 		`, key, value)
 	if err != nil {
 		fmt.Println("Error inserting into database:", err)
