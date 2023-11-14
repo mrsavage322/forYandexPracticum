@@ -11,7 +11,7 @@ var (
 	URLMap       URLStorage
 	FilePATH     string
 	DatabaseAddr string
-	URLMapDB     URLDatabaseStorage
+	URLMapDB     URLStorage
 )
 
 type Config struct {

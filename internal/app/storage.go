@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	_ "fmt"
 	"github.com/jackc/pgx/v5"
 	"io"
@@ -18,75 +19,6 @@ type URLStorage interface {
 	SetURL
 	GetURL
 	SaveToFile() error
-}
-
-type URLDatabaseStorage interface {
-	Set(key, value string) error
-	Get(key string) (string, error)
-}
-
-type URLDatabase struct {
-	conn *pgx.Conn
-}
-
-func NewURLDatabase() (URLDatabaseStorage, error) {
-	conn, err := pgx.Connect(context.Background(), DatabaseAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	db := &URLDatabase{conn: conn}
-	err = db.CreateTableIfNotExists()
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
-func (db *URLDatabase) Set(key, value string) error {
-	tx, err := db.conn.Begin(context.Background())
-	if err != nil {
-		return err
-	}
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			sugar.Error(err)
-			return
-		}
-	}(tx, context.Background())
-
-	_, err = tx.Exec(context.Background(), "INSERT INTO url_storage (short_url, original_url) VALUES ($1, $2)", key, value)
-	if err != nil {
-		return err
-	}
-	return tx.Commit(context.Background())
-}
-
-func (db *URLDatabase) Get(key string) (string, error) {
-	var originalURL string
-
-	tx, err := db.conn.Begin(context.Background())
-	if err != nil {
-		return "", err
-	}
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			sugar.Error(err)
-			return
-		}
-	}(tx, context.Background())
-
-	err = tx.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
-	if err != nil {
-		return "", err
-	}
-	if err := tx.Commit(context.Background()); err != nil {
-		return "", err
-	}
-	return originalURL, nil
 }
 
 type URLData struct {
@@ -131,15 +63,40 @@ func NewURLMapStorage() URLStorage {
 	}
 }
 
-func NewDBMapStorage() URLDatabaseStorage {
-	if DatabaseAddr != "" {
-		db, err := NewURLDatabase()
-		if err != nil {
-			panic(err)
-		}
-		return db
+func NewURLDBStorage(connString string) URLStorage {
+	conn, err := pgx.Connect(context.Background(), connString)
+	if err != nil {
+		return nil
 	}
-	return nil
+
+	urlStorage := &URLDBStorage{
+		conn: conn,
+	}
+
+	if err := urlStorage.CreateTable(); err != nil {
+		return nil
+	}
+	return urlStorage
+}
+
+type URLDBStorage struct {
+	conn *pgx.Conn
+}
+
+func (s *URLDBStorage) Get(key string) (string, bool) {
+	var originalURL string
+	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+	if err != nil {
+		return "", false
+	}
+	return originalURL, true
+}
+
+func (s *URLDBStorage) Set(key, value string) {
+	_, err := s.conn.Exec(context.Background(), "INSERT INTO url_storage (short_url, original_url) VALUES ($1, $2)", key, value)
+	if err != nil {
+		fmt.Println("Error inserting into database:", err)
+	}
 }
 
 func (s *URLMapStorage) SaveToFile() error {
@@ -186,11 +143,19 @@ func loadDataFromFile(filename string) map[string]string {
 	return nil
 }
 
-func (db *URLDatabase) CreateTableIfNotExists() error {
-	_, err := db.conn.Exec(context.Background(), `
-        CREATE TABLE IF NOT EXISTS url_storage (
+func (s *URLDBStorage) SaveToFile() error {
+	return nil
+}
+
+func (s *URLDBStorage) CloseDB() {
+	s.conn.Close(context.Background())
+}
+
+func (s *URLDBStorage) CreateTable() error {
+	_, err := s.conn.Exec(context.Background(), `
+        CREATE TABLE IF NOT EXISTS urls (
             uuid SERIAL PRIMARY KEY,
-            short_url VARCHAR NOT NULL,
+            short_url VARCHAR UNIQUE NOT NULL,
             original_url TEXT NOT NULL
         );
     `)
