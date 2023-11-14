@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	_ "fmt"
 	"github.com/jackc/pgx/v5"
 	"io"
 	"os"
