@@ -152,7 +152,7 @@ func (s *URLDBStorage) CloseDB() {
 
 func (s *URLDBStorage) CreateTable() error {
 	_, err := s.conn.Exec(context.Background(), `
-        CREATE TABLE IF NOT EXISTS urls (
+        CREATE TABLE IF NOT EXISTS url_storage (
             uuid SERIAL PRIMARY KEY,
             short_url VARCHAR UNIQUE NOT NULL,
             original_url VARCHAR NOT NULL
