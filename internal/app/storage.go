@@ -92,7 +92,10 @@ func (s *URLDBStorage) Get(key string) (string, bool) {
 }
 
 func (s *URLDBStorage) Set(key, value string) {
-	_, err := s.conn.Exec(context.Background(), "INSERT INTO url_storage (short_url, original_url) VALUES ($1, $2)", key, value)
+	_, err := s.conn.Exec(context.Background(), `INSERT INTO url_storage (short_url, original_url)
+		VALUES ($1, $2)
+		ON CONFLICT (original_url) DO NOTHING
+		`, key, value)
 	if err != nil {
 		fmt.Println("Error inserting into database:", err)
 	}
@@ -155,7 +158,7 @@ func (s *URLDBStorage) CreateTable() error {
         CREATE TABLE IF NOT EXISTS url_storage (
             uuid SERIAL PRIMARY KEY,
             short_url VARCHAR UNIQUE NOT NULL,
-            original_url VARCHAR NOT NULL
+            original_url VARCHAR UNIQUE NOT NULL
         );
     `)
 	return err
