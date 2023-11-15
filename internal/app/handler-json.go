@@ -30,7 +30,7 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 	if DatabaseAddr != "" {
 		ok := URLMapDB.Set(id, link)
 		if !ok {
-			http.Error(w, "Already exist", http.StatusConflict)
+			http.Error(w, "Already exist: "+id, http.StatusConflict)
 			return
 		}
 	} else {
