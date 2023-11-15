@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/jackc/pgx/v5"
 	"io"
 	"os"
@@ -105,16 +104,38 @@ func (s *URLDBStorage) GetReverse(key string) (string, error) {
 }
 
 func (s *URLDBStorage) Set(key, value string) error {
-	_, err := s.conn.Exec(context.Background(), `INSERT INTO url_storage (short_url, original_url)
+	tx, err := s.conn.Begin(context.Background())
+	if err != nil {
+		sugar.Info("Error beginning transaction:", err)
+		return err
+	}
+	defer func() {
+		if err != nil {
+			rollbackErr := tx.Rollback(context.Background())
+			if rollbackErr != nil {
+				sugar.Info("Error rolling back transaction:", rollbackErr)
+			}
+		}
+	}()
+
+	_, err = tx.Exec(context.Background(), `
+		INSERT INTO url_storage (short_url, original_url)
 		VALUES ($1, $2)
 		ON CONFLICT (original_url)
 		DO UPDATE SET original_url = null
-		`, key, value)
+	`, key, value)
 	if err != nil {
-		fmt.Println("Error inserting into database:", err)
+		sugar.Info("Error inserting into database:", err)
 		return err
 	}
-	return err
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		sugar.Info("Error committing transaction:", err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *URLMapStorage) SaveToFile() error {
