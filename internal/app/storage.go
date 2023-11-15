@@ -28,6 +28,7 @@ type URLData struct {
 
 type GetURL interface {
 	Get(key string) (string, bool)
+	GetReverse(key string) (string, bool)
 }
 
 func (s *URLMapStorage) Get(key string) (string, bool) {
@@ -86,6 +87,15 @@ type URLDBStorage struct {
 func (s *URLDBStorage) Get(key string) (string, bool) {
 	var originalURL string
 	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+	if err != nil {
+		return "", false
+	}
+	return originalURL, true
+}
+
+func (s *URLDBStorage) GetReverse(key string) (string, bool) {
+	var originalURL string
+	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1", key).Scan(&originalURL)
 	if err != nil {
 		return "", false
 	}
@@ -166,4 +176,8 @@ func (s *URLDBStorage) CreateTable() error {
         );
     `)
 	return err
+}
+
+func (s *URLMapStorage) GetReverse(key string) (string, bool) {
+	return "", true
 }

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"math/rand"
@@ -29,7 +28,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 	if DatabaseAddr != "" {
 		ok := URLMapDB.Set(id, link)
 		if !ok {
-			originalURL, okk := URLMapDB.Get(link)
+			originalURL, okk := URLMapDB.GetReverse(link)
 			if !okk {
 				return
 			}
@@ -57,11 +56,11 @@ func GenerateRandomID(length int) string {
 	return string(result)
 }
 
-func (s *URLDBStorage) Get(key string) (string, bool) {
-	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1", key).Scan(&originalURL)
-	if err != nil {
-		return "", false
-	}
-	return originalURL, true
-}
+//func (s *URLDBStorage) Get(key string) (string, bool) {
+//	var originalURL string
+//	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1", key).Scan(&originalURL)
+//	if err != nil {
+//		return "", false
+//	}
+//	return originalURL, true
+//}
