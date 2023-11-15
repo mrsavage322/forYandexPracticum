@@ -28,7 +28,9 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 	if DatabaseAddr != "" {
 		ok := URLMapDB.Set(id, link)
 		if !ok {
-			http.Error(w, shortURL, http.StatusConflict)
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(shortURL))
 			return
 		}
 	} else {

@@ -30,7 +30,15 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 	if DatabaseAddr != "" {
 		ok := URLMapDB.Set(id, link)
 		if !ok {
-			http.Error(w, shortURL, http.StatusConflict)
+			resp := Response{Result: shortURL}
+			responseData, err := json.Marshal(resp)
+			if err != nil {
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			w.Write(responseData)
 			return
 		}
 	} else {
