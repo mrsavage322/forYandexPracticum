@@ -55,12 +55,3 @@ func GenerateRandomID(length int) string {
 	}
 	return string(result)
 }
-
-//func (s *URLDBStorage) Get(key string) (string, bool) {
-//	var originalURL string
-//	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1", key).Scan(&originalURL)
-//	if err != nil {
-//		return "", false
-//	}
-//	return originalURL, true
-//}
