@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"io"
-	_ "net/http"
 	"os"
 	"strconv"
 )
@@ -37,14 +36,15 @@ func (s *URLMapStorage) Get(key string) (string, bool) {
 }
 
 type SetURL interface {
-	Set(key, value string)
+	Set(key, value string) bool
 }
 
-func (s *URLMapStorage) Set(key, value string) {
+func (s *URLMapStorage) Set(key, value string) bool {
 	s.data[key] = value
 	if FilePATH != "" {
 		s.SaveToFile()
 	}
+	return true
 }
 
 type URLMapStorage struct {
@@ -92,7 +92,7 @@ func (s *URLDBStorage) Get(key string) (string, bool) {
 	return originalURL, true
 }
 
-func (s *URLDBStorage) Set(key, value string) {
+func (s *URLDBStorage) Set(key, value string) bool {
 	_, err := s.conn.Exec(context.Background(), `INSERT INTO url_storage (short_url, original_url)
 		VALUES ($1, $2)
 		ON CONFLICT (original_url)
@@ -100,7 +100,9 @@ func (s *URLDBStorage) Set(key, value string) {
 		`, key, value)
 	if err != nil {
 		fmt.Println("Error inserting into database:", err)
+		return false
 	}
+	return true
 }
 
 func (s *URLMapStorage) SaveToFile() error {

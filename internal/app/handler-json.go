@@ -28,7 +28,11 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
 
 	if DatabaseAddr != "" {
-		URLMapDB.Set(id, link)
+		ok := URLMapDB.Set(id, link)
+		if !ok {
+			http.Error(w, "Already exist", http.StatusConflict)
+			return
+		}
 	} else {
 		URLMap.Set(id, link)
 	}
