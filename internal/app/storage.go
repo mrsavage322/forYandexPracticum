@@ -109,23 +109,16 @@ func (s *URLDBStorage) Set(key, value string) error {
 		sugar.Info("Error beginning transaction:", err)
 		return err
 	}
-	defer func() {
-		if err != nil {
-			rollbackErr := tx.Rollback(context.Background())
-			if rollbackErr != nil {
-				sugar.Info("Error rolling back transaction:", rollbackErr)
-			}
-		}
-	}()
-
 	_, err = tx.Exec(context.Background(), `
 		INSERT INTO url_storage (short_url, original_url)
 		VALUES ($1, $2)
 		ON CONFLICT (original_url)
-		DO UPDATE SET original_url = null
+		DO UPDATE SET uuid = 1 
 	`, key, value)
+
 	if err != nil {
-		sugar.Info("Error inserting into database:", err)
+		tx.Rollback(context.Background())
+		sugar.Info("Error rolling back transaction:", err)
 		return err
 	}
 
@@ -134,7 +127,6 @@ func (s *URLDBStorage) Set(key, value string) error {
 		sugar.Info("Error committing transaction:", err)
 		return err
 	}
-
 	return nil
 }
 
@@ -197,6 +189,11 @@ func (s *URLDBStorage) CreateTable() error {
             short_url VARCHAR UNIQUE NOT NULL,
             original_url VARCHAR UNIQUE NOT NULL
         );
+    `)
+
+	s.conn.Exec(context.Background(), `
+        INSERT INTO url_storage (short_url, original_url) 
+        VALUES ('first_short_url', 'first_original_url');
     `)
 	return err
 }
