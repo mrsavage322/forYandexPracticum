@@ -33,6 +33,7 @@ type GetURL interface {
 func (s *URLMapStorage) Get(key string) (string, error) {
 	value, ok := s.data[key]
 	if !ok {
+		ok = false
 	}
 	return value, nil
 }
