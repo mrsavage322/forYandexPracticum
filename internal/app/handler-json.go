@@ -28,10 +28,11 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
 
 	if DatabaseAddr != "" {
-		ok := URLMapDB.Set(id, link)
-		if !ok {
-			originalURL, okk := URLMapDB.GetReverse(link)
-			if !okk {
+		err := URLMapDB.Set(id, link)
+		if err != nil {
+			originalURL, err := URLMapDB.GetReverse(link)
+			if err != nil {
+				sugar.Warnln(err)
 				return
 			}
 			shortURL := fmt.Sprintf("%s/%s", BaseURL, originalURL)

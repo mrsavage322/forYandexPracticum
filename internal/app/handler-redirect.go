@@ -8,8 +8,8 @@ import (
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if DatabaseAddr != "" {
-		originalURL, ok := URLMapDB.Get(id)
-		if !ok {
+		originalURL, err := URLMapDB.Get(id)
+		if err != nil {
 			http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 			return
 		}
@@ -17,8 +17,8 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTemporaryRedirect)
 
 	} else {
-		originalURL, ok := URLMap.Get(id)
-		if !ok {
+		originalURL, err := URLMap.Get(id)
+		if err != nil {
 			http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 			return
 		}

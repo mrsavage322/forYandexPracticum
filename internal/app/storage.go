@@ -27,25 +27,25 @@ type URLData struct {
 }
 
 type GetURL interface {
-	Get(key string) (string, bool)
-	GetReverse(key string) (string, bool)
+	Get(key string) (string, error)
+	GetReverse(key string) (string, error)
 }
 
-func (s *URLMapStorage) Get(key string) (string, bool) {
-	value, ok := s.data[key]
-	return value, ok
+func (s *URLMapStorage) Get(key string) (string, error) {
+	value, _ := s.data[key]
+	return value, nil
 }
 
 type SetURL interface {
-	Set(key, value string) bool
+	Set(key, value string) error
 }
 
-func (s *URLMapStorage) Set(key, value string) bool {
+func (s *URLMapStorage) Set(key, value string) error {
 	s.data[key] = value
 	if FilePATH != "" {
 		s.SaveToFile()
 	}
-	return true
+	return nil
 }
 
 type URLMapStorage struct {
@@ -71,7 +71,8 @@ func NewURLDBStorage(connString string) URLStorage {
 	}
 
 	urlStorage := &URLDBStorage{
-		conn: conn,
+		conn:  conn,
+		error: err,
 	}
 
 	if err := urlStorage.CreateTable(); err != nil {
@@ -82,27 +83,28 @@ func NewURLDBStorage(connString string) URLStorage {
 
 type URLDBStorage struct {
 	conn *pgx.Conn
+	error
 }
 
-func (s *URLDBStorage) Get(key string) (string, bool) {
+func (s *URLDBStorage) Get(key string) (string, error) {
 	var originalURL string
 	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
 	if err != nil {
-		return "", false
+		return "", err
 	}
-	return originalURL, true
+	return originalURL, err
 }
 
-func (s *URLDBStorage) GetReverse(key string) (string, bool) {
+func (s *URLDBStorage) GetReverse(key string) (string, error) {
 	var originalURL string
 	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1", key).Scan(&originalURL)
 	if err != nil {
-		return "", false
+		return "", err
 	}
-	return originalURL, true
+	return originalURL, err
 }
 
-func (s *URLDBStorage) Set(key, value string) bool {
+func (s *URLDBStorage) Set(key, value string) error {
 	_, err := s.conn.Exec(context.Background(), `INSERT INTO url_storage (short_url, original_url)
 		VALUES ($1, $2)
 		ON CONFLICT (original_url)
@@ -110,9 +112,9 @@ func (s *URLDBStorage) Set(key, value string) bool {
 		`, key, value)
 	if err != nil {
 		fmt.Println("Error inserting into database:", err)
-		return false
+		return err
 	}
-	return true
+	return err
 }
 
 func (s *URLMapStorage) SaveToFile() error {
@@ -178,6 +180,6 @@ func (s *URLDBStorage) CreateTable() error {
 	return err
 }
 
-func (s *URLMapStorage) GetReverse(key string) (string, bool) {
-	return "", true
+func (s *URLMapStorage) GetReverse(key string) (string, error) {
+	return "", nil
 }
