@@ -44,7 +44,7 @@ type SetURL interface {
 
 func (s *URLMapStorage) Set(key, value string) error {
 	s.data[key] = value
-	if FilePATH != "" {
+	if Cfg.FilePATH != "" {
 		s.SaveToFile()
 	}
 	return nil
@@ -56,8 +56,8 @@ type URLMapStorage struct {
 }
 
 func NewURLMapStorage() URLStorage {
-	if FilePATH != "" {
-		filename = FilePATH
+	if Cfg.FilePATH != "" {
+		filename = Cfg.FilePATH
 	}
 	loadDataFromFile(filename)
 	return &URLMapStorage{

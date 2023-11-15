@@ -8,7 +8,7 @@ import (
 )
 
 func BDConnection(w http.ResponseWriter, r *http.Request) {
-	conn, err := pgx.Connect(context.Background(), DatabaseAddr)
+	conn, err := pgx.Connect(context.Background(), Cfg.DatabaseAddr)
 	if err != nil {
 		sugar.Error("Database connection error:", err)
 		http.Error(w, "Database connection error", http.StatusInternalServerError)

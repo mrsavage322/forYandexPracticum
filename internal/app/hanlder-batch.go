@@ -30,13 +30,13 @@ func HandleBatch(w http.ResponseWriter, r *http.Request) {
 	for _, req := range reqs {
 		link := req.OriginURL
 		id := GenerateRandomID(5)
-		shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
+		shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, id)
 		correlationID := req.CorrelID
 
-		if DatabaseAddr != "" {
-			URLMapDB.Set(id, link)
+		if Cfg.DatabaseAddr != "" {
+			Cfg.URLMapDB.Set(id, link)
 		} else {
-			URLMap.Set(id, link)
+			Cfg.URLMap.Set(id, link)
 		}
 
 		resp := ResponseBatch{
