@@ -25,8 +25,31 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 
 	link := req.URL
 	id := GenerateRandomID(5)
-	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
-	URLMap.Set(id, link)
+	shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, id)
+
+	if Cfg.DatabaseAddr != "" {
+		err := Cfg.URLMapDB.Set(id, link)
+		if err != nil {
+			originalURL, err := Cfg.URLMapDB.GetReverse(link)
+			if err != nil {
+				sugar.Warnln(err)
+				return
+			}
+			shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, originalURL)
+			resp := Response{Result: shortURL}
+			responseData, err := json.Marshal(resp)
+			if err != nil {
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			w.Write(responseData)
+			return
+		}
+	} else {
+		Cfg.URLMap.Set(id, link)
+	}
 
 	resp := Response{Result: shortURL}
 	responseData, err := json.Marshal(resp)

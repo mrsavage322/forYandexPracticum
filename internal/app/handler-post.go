@@ -23,8 +23,25 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := GenerateRandomID(5)
-	shortURL := fmt.Sprintf("%s/%s", BaseURL, id)
-	URLMap.Set(id, link)
+	shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, id)
+
+	if Cfg.DatabaseAddr != "" {
+		err := Cfg.URLMapDB.Set(id, link)
+		if err != nil {
+			originalURL, err := Cfg.URLMapDB.GetReverse(link)
+			if err != nil {
+				return
+			}
+			shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, originalURL)
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(shortURL))
+			return
+		}
+	} else {
+		Cfg.URLMap.Set(id, link)
+	}
+
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))

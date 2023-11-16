@@ -15,7 +15,8 @@ import (
 func main() {
 	app.SetFlags()
 	app.SetConfig()
-	app.URLMap = app.NewURLMapStorage()
+	app.Cfg.URLMap = app.NewURLMapStorage()
+	app.Cfg.URLMapDB = app.NewURLDBStorage(app.Cfg.DatabaseAddr)
 	app.InitializeLogger()
 
 	r := chi.NewRouter()
@@ -23,11 +24,13 @@ func main() {
 	r.Use(app.GzipMiddleware)
 	r.Get("/", app.Redirect)
 	r.Get("/{id}", app.Redirect)
+	r.Get("/ping", app.BDConnection)
 	r.Post("/", app.HandlePost)
 	r.Post("/api/shorten", app.HandleJSON)
+	r.Post("/api/shorten/batch", app.HandleBatch)
 
 	srv := &http.Server{
-		Addr:    app.ServerAddr,
+		Addr:    app.Cfg.ServerAddr,
 		Handler: r,
 	}
 
@@ -47,7 +50,7 @@ func main() {
 		}
 	}()
 
-	log.Printf("Server is listening on %s\n", app.ServerAddr)
+	log.Printf("Server is listening on %s\n", app.Cfg.ServerAddr)
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("HTTP server ListenAndServe: %v", err)

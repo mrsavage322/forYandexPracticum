@@ -1,7 +1,9 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/jackc/pgx/v5"
 	"io"
 	"os"
 	"strconv"
@@ -24,23 +26,28 @@ type URLData struct {
 }
 
 type GetURL interface {
-	Get(key string) (string, bool)
+	Get(key string) (string, error)
+	GetReverse(key string) (string, error)
 }
 
-func (s *URLMapStorage) Get(key string) (string, bool) {
+func (s *URLMapStorage) Get(key string) (string, error) {
 	value, ok := s.data[key]
-	return value, ok
+	if !ok {
+		ok = false
+	}
+	return value, nil
 }
 
 type SetURL interface {
-	Set(key, value string)
+	Set(key, value string) error
 }
 
-func (s *URLMapStorage) Set(key, value string) {
+func (s *URLMapStorage) Set(key, value string) error {
 	s.data[key] = value
-	if FilePATH != "" {
+	if Cfg.FilePATH != "" {
 		s.SaveToFile()
 	}
+	return nil
 }
 
 type URLMapStorage struct {
@@ -49,16 +56,81 @@ type URLMapStorage struct {
 }
 
 func NewURLMapStorage() URLStorage {
-	//filename := DefaultFilePath
-	if FilePATH != "" {
-		filename = FilePATH
+	if Cfg.FilePATH != "" {
+		filename = Cfg.FilePATH
 	}
-	//data := make(map[string]string)
 	loadDataFromFile(filename)
 	return &URLMapStorage{
 		data:     data,
 		filename: filename,
 	}
+}
+
+func NewURLDBStorage(connString string) URLStorage {
+	conn, err := pgx.Connect(context.Background(), connString)
+	if err != nil {
+		return nil
+	}
+
+	urlStorage := &URLDBStorage{
+		conn:  conn,
+		error: err,
+	}
+
+	if err := urlStorage.CreateTable(); err != nil {
+		return nil
+	}
+	return urlStorage
+}
+
+type URLDBStorage struct {
+	conn *pgx.Conn
+	error
+}
+
+func (s *URLDBStorage) Get(key string) (string, error) {
+	var originalURL string
+	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+	if err != nil {
+		return "", err
+	}
+	return originalURL, err
+}
+
+func (s *URLDBStorage) GetReverse(key string) (string, error) {
+	var originalURL string
+	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1", key).Scan(&originalURL)
+	if err != nil {
+		return "", err
+	}
+	return originalURL, err
+}
+
+func (s *URLDBStorage) Set(key, value string) error {
+	tx, err := s.conn.Begin(context.Background())
+	if err != nil {
+		sugar.Info("Error beginning transaction:", err)
+		return err
+	}
+	_, err = tx.Exec(context.Background(), `
+		INSERT INTO url_storage (short_url, original_url)
+		VALUES ($1, $2)
+		ON CONFLICT (original_url)
+		DO UPDATE SET uuid = 1 
+	`, key, value)
+
+	if err != nil {
+		tx.Rollback(context.Background())
+		sugar.Info("Error rolling back transaction:", err)
+		return err
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		sugar.Info("Error committing transaction:", err)
+		return err
+	}
+	return nil
 }
 
 func (s *URLMapStorage) SaveToFile() error {
@@ -103,4 +175,32 @@ func loadDataFromFile(filename string) map[string]string {
 		return nil
 	}
 	return nil
+}
+
+func (s *URLDBStorage) SaveToFile() error {
+	return nil
+}
+
+func (s *URLDBStorage) CloseDB() {
+	s.conn.Close(context.Background())
+}
+
+func (s *URLDBStorage) CreateTable() error {
+	_, err := s.conn.Exec(context.Background(), `
+        CREATE TABLE IF NOT EXISTS url_storage (
+            uuid SERIAL PRIMARY KEY,
+            short_url VARCHAR UNIQUE NOT NULL,
+            original_url VARCHAR UNIQUE NOT NULL
+        );
+    `)
+
+	s.conn.Exec(context.Background(), `
+        INSERT INTO url_storage (short_url, original_url) 
+        VALUES ('first_short_url', 'first_original_url');
+    `)
+	return err
+}
+
+func (s *URLMapStorage) GetReverse(key string) (string, error) {
+	return "", nil
 }

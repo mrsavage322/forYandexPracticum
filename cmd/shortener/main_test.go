@@ -57,7 +57,7 @@ func TestHandler(t *testing.T) {
 			var response *http.Response
 			var err error
 
-			app.URLMap = app.NewURLMapStorage()
+			app.Cfg.URLMap = app.NewURLMapStorage()
 
 			if test.method == http.MethodPost {
 				request := httptest.NewRequest(test.method, test.request, strings.NewReader(test.body))
@@ -67,7 +67,7 @@ func TestHandler(t *testing.T) {
 				response = recorder.Result()
 			} else if test.method == http.MethodGet {
 				id := app.GenerateRandomID(5)
-				app.URLMap.Set(id, "https://example.com")
+				app.Cfg.URLMap.Set(id, "https://example.com")
 				request := httptest.NewRequest(test.method, test.request, nil)
 				response = httptest.NewRecorder().Result()
 				app.Redirect(httptest.NewRecorder(), request)
