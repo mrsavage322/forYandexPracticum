@@ -1,14 +1,15 @@
-package app
+package handler
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/mrsavage322/foryandex/internal/app"
 	"net/http"
 )
 
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	if Cfg.DatabaseAddr != "" {
-		originalURL, err := Cfg.URLMapDB.Get(id)
+	if app.Cfg.DatabaseAddr != "" {
+		originalURL, err := app.Cfg.URLMapDB.Get(id)
 		if err != nil {
 			http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 			return
@@ -17,7 +18,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTemporaryRedirect)
 
 	} else {
-		originalURL, err := Cfg.URLMap.Get(id)
+		originalURL, err := app.Cfg.URLMap.Get(id)
 		if err != nil {
 			http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 			return

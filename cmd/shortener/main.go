@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/mrsavage322/foryandex/internal/app"
+	"github.com/mrsavage322/foryandex/internal/app/handler"
 	"log"
 	"net/http"
 	"os"
@@ -21,13 +22,14 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(app.LogRequest)
-	r.Use(app.GzipMiddleware)
-	r.Get("/", app.Redirect)
-	r.Get("/{id}", app.Redirect)
-	r.Get("/ping", app.BDConnection)
-	r.Post("/", app.HandlePost)
-	r.Post("/api/shorten", app.HandleJSON)
-	r.Post("/api/shorten/batch", app.HandleBatch)
+	r.Use(handler.GzipMiddleware)
+	r.Get("/", handler.Redirect)
+	r.Get("/{id}", handler.Redirect)
+	r.Get("/ping", handler.BDConnection)
+	r.Get("/api/user/urls", handler.Redirect)
+	r.Post("/", handler.HandlePost)
+	r.Post("/api/shorten", handler.HandleJSON)
+	r.Post("/api/shorten/batch", handler.HandleBatch)
 
 	srv := &http.Server{
 		Addr:    app.Cfg.ServerAddr,

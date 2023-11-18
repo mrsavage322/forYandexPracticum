@@ -1,22 +1,18 @@
-package app
+package handler
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mrsavage322/foryandex/internal/app"
 	"net/http"
 )
 
-type RequestBatch struct {
-	CorrelID  string `json:"correlation_id"`
-	OriginURL string `json:"original_url"`
+type ResponseBatchForUser struct {
+	OriginalURL string `json:"original_url"`
+	ShortURL    string `json:"short_url"`
 }
 
-type ResponseBatch struct {
-	CorrelID string `json:"correlation_id"`
-	ShortURL string `json:"short_url"`
-}
-
-func HandleBatch(w http.ResponseWriter, r *http.Request) {
+func HandleURLsToUser(w http.ResponseWriter, r *http.Request) {
 	var reqs []RequestBatch
 	var resps []ResponseBatch
 
@@ -30,13 +26,13 @@ func HandleBatch(w http.ResponseWriter, r *http.Request) {
 	for _, req := range reqs {
 		link := req.OriginURL
 		id := GenerateRandomID(5)
-		shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, id)
+		shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, id)
 		correlationID := req.CorrelID
 
-		if Cfg.DatabaseAddr != "" {
-			Cfg.URLMapDB.Set(id, link)
+		if app.Cfg.DatabaseAddr != "" {
+			app.Cfg.URLMapDB.Get(id)
 		} else {
-			Cfg.URLMap.Set(id, link)
+			app.Cfg.URLMap.Get(id)
 		}
 
 		resp := ResponseBatch{
