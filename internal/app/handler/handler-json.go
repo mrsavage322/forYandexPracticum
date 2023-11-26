@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mrsavage322/foryandex/internal/app"
+	"log"
 	"net/http"
 )
 
@@ -33,7 +34,7 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			originalURL, err := app.Cfg.URLMapDB.GetReverse(link)
 			if err != nil {
-				app.sugar.Warnln(err)
+				log.Println(err)
 				return
 			}
 			shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, originalURL)

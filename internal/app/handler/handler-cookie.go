@@ -2,53 +2,49 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/mrsavage322/foryandex/internal/app"
 	"net/http"
 )
 
-type ResponseBatchForUser struct {
-	OriginalURL string `json:"original_url"`
-	ShortURL    string `json:"short_url"`
-}
+//type ResponseBatchForUser struct {
+//	OriginalURL string `json:"original_url"`
+//	ShortURL    string `json:"short_url"`
+//}
 
-func HandleURLsToUser(w http.ResponseWriter, r *http.Request) {
-	var reqs []RequestBatch
-	var resps []ResponseBatch
+const (
+	cookieName = "user_id"
+)
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&reqs)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+// GetUserURLs обрабатывает запрос на получение URL пользователя из базы данных
+func GetUserURLs(w http.ResponseWriter, r *http.Request) {
+	userIDCookie, err := r.Cookie(cookieName)
+	if err != nil || userIDCookie.Value == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	for _, req := range reqs {
-		link := req.OriginURL
-		id := GenerateRandomID(5)
-		shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, id)
-		correlationID := req.CorrelID
+	// Здесь вы должны использовать ваш метод для получения URL из базы данных
+	// Пример: urls, err := app.Cfg.URLMapDB.GetURLsByUserID(userIDCookie.Value)
+	// Замените app.Cfg.URLMapDB.GetURLsByUserID(userIDCookie.Value) на ваш реальный метод получения данных из БД
 
-		if app.Cfg.DatabaseAddr != "" {
-			app.Cfg.URLMapDB.Get(id)
-		} else {
-			app.Cfg.URLMap.Get(id)
-		}
-
-		resp := ResponseBatch{
-			CorrelID: correlationID,
-			ShortURL: shortURL,
-		}
-		resps = append(resps, resp)
+	// Ваш код для запроса к базе данных и получения URL
+	urls := []struct {
+		ShortURL    string `json:"short_url"`
+		OriginalURL string `json:"original_url"`
+	}{
+		// Ваши данные из базы данных будут здесь
+		// Пример: {"short_url": "http://short1", "original_url": "http://original1"},
+		//         {"short_url": "http://short2", "original_url": "http://original2"},
 	}
 
-	responseData, err := json.Marshal(resps)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Проверяем, есть ли у пользователя сокращенные URL
+	if len(urls) == 0 {
+		// Отправляем статус 204 No Content, так как нет данных
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
+	// Отправляем данные в формате JSON
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(responseData)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(urls)
 }

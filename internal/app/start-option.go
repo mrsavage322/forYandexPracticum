@@ -14,6 +14,7 @@ type Config struct {
 	DatabaseAddr string `env:"DATABASE_DSN"`
 	URLMap       URLStorage
 	URLMapDB     URLStorage
+	//CookieName   string
 }
 
 func SetConfig() {
