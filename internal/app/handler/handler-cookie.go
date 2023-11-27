@@ -22,6 +22,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
+
 		var response []ResponseBatchForUser
 		for shortURL, originalURL := range urlMap {
 			resp := ResponseBatchForUser{
