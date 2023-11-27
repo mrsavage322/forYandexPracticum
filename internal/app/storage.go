@@ -32,6 +32,7 @@ type GetURL interface {
 	Get(key string) (string, error)
 	GetReverse(key, userID string) (string, error)
 	GetDB(key, userID string) (string, error)
+	GetDBAll(userID string) (map[string]string, error)
 }
 
 func (s *URLMapStorage) Get(key string) (string, error) {
@@ -109,6 +110,26 @@ func (s *URLDBStorage) GetReverse(key, userID string) (string, error) {
 		return "", err
 	}
 	return originalURL, err
+}
+
+func (s *URLDBStorage) GetDBAll(userID string) (map[string]string, error) {
+	rows, err := s.conn.Query(context.Background(), "SELECT original_url, short_url FROM url_storage WHERE user_id = $1", userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	urlMap := make(map[string]string)
+
+	for rows.Next() {
+		var shortURL, originalURL string
+		err := rows.Scan(&originalURL, &shortURL)
+		if err != nil {
+			return nil, err
+		}
+		urlMap[shortURL] = originalURL
+	}
+	return urlMap, nil
 }
 
 func (s *URLDBStorage) SetDB(key, value, userID string) error {
@@ -226,4 +247,8 @@ func (s *URLMapStorage) SetDB(key, value, userID string) error {
 
 func (s *URLDBStorage) Set(key, value string) error {
 	return nil
+}
+
+func (s *URLMapStorage) GetDBAll(userID string) (map[string]string, error) {
+	return nil, nil
 }
