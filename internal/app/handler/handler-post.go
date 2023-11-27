@@ -27,7 +27,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 	shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, id)
 
 	if app.Cfg.DatabaseAddr != "" {
-		err := app.Cfg.URLMapDB.Set(id, link)
+		err := app.Cfg.URLMapDB.SetDB(id, link, app.Cfg.UserID)
 		if err != nil {
 			originalURL, err := app.Cfg.URLMapDB.GetReverse(link, app.Cfg.UserID)
 			if err != nil {

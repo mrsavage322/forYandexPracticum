@@ -27,12 +27,11 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				HttpOnly: cookieHttpOnly,
 			}
 
-			Cfg.UserID = userID.Value
-			//fmt.Println(Cfg.UserID)
 			http.SetCookie(w, &cookie)
 		}
 
 		// Call the next handler in the chain
+		Cfg.UserID = userID.Value
 		next.ServeHTTP(w, r)
 	})
 }

@@ -25,7 +25,7 @@ func main() {
 	r.Use(handler.GzipMiddleware)
 	r.Use(app.AuthMiddleware)
 	r.Use(app.AuthenticatorMiddleware)
-	//r.Get("/", handler.Redirect)
+	r.Get("/", handler.Redirect)
 	r.Get("/{id}", handler.Redirect)
 	r.Get("/ping", handler.BDConnection)
 	r.Get("/api/user/urls", handler.GetUserURLs)

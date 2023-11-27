@@ -196,7 +196,7 @@ func (s *URLDBStorage) CreateTable() error {
             uuid SERIAL PRIMARY KEY,
             short_url VARCHAR UNIQUE NOT NULL,
             original_url VARCHAR UNIQUE NOT NULL,
-            user_id VARCHAR UNIQUE                                 
+            user_id VARCHAR                                 
         );
     `)
 
