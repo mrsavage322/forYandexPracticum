@@ -93,9 +93,9 @@ type URLDBStorage struct {
 	error
 }
 
-func (s *URLDBStorage) GetBD(key, userID string) (string, error) {
+func (s *URLDBStorage) GetDB(key, userID string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 and user_id = $2", key, userID).Scan(&originalURL)
+	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
@@ -104,7 +104,7 @@ func (s *URLDBStorage) GetBD(key, userID string) (string, error) {
 
 func (s *URLDBStorage) GetReverse(key, userID string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1 and user_id = $2", key, userID).Scan(&originalURL)
+	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
@@ -222,10 +222,6 @@ func (s *URLDBStorage) Get(key string) (string, error) {
 
 func (s *URLMapStorage) SetDB(key, value, userID string) error {
 	return nil
-}
-
-func (s *URLDBStorage) GetDB(key, userID string) (string, error) {
-	return "", nil
 }
 
 func (s *URLDBStorage) Set(key, value string) error {
