@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/jackc/pgx/v5"
 	"io"
-	"log"
 	"os"
 	"strconv"
 )
@@ -225,7 +224,6 @@ func (s *URLDBStorage) CreateTable() error {
         INSERT INTO url_storage (short_url, original_url, user_id) 
         VALUES ('first_short_url', 'first_original_url', 'first_user_id');
     `)
-	log.Println("CREATE FATAL ERROR")
 	return err
 }
 

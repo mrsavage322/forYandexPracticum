@@ -11,7 +11,6 @@ type ResponseBatchForUser struct {
 	ShortURL    string `json:"short_url"`
 }
 
-// GetUserURLs обрабатывает запрос на получение URL пользователя из базы данных
 func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
 		urlMap, err := app.Cfg.URLMapDB.GetDBAll(app.Cfg.UserID)
@@ -23,11 +22,23 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(urlMap); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		var response []ResponseBatchForUser
+		for shortURL, originalURL := range urlMap {
+			resp := ResponseBatchForUser{
+				OriginalURL: originalURL,
+				ShortURL:    app.Cfg.BaseURL + shortURL,
+			}
+			response = append(response, resp)
+		}
+
+		responseData, err := json.Marshal(response)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(responseData)
 	}
 }
