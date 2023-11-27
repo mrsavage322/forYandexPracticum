@@ -26,7 +26,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 		for shortURL, originalURL := range urlMap {
 			resp := ResponseBatchForUser{
 				OriginalURL: originalURL,
-				ShortURL:    app.Cfg.BaseURL + shortURL,
+				ShortURL:    app.Cfg.BaseURL + "/" + shortURL,
 			}
 			response = append(response, resp)
 		}
