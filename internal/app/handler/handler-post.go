@@ -29,7 +29,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
 		err := app.Cfg.URLMapDB.Set(id, link)
 		if err != nil {
-			originalURL, err := app.Cfg.URLMapDB.GetReverse(link)
+			originalURL, err := app.Cfg.URLMapDB.GetReverse(link, app.Cfg.UserID)
 			if err != nil {
 				return
 			}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/jackc/pgx/v5"
 	"io"
+	"log"
 	"os"
 	"strconv"
 )
@@ -12,6 +13,8 @@ import (
 const DefaultFilePath = "/tmp/short-url-db.json"
 
 var filename, data = DefaultFilePath, make(map[string]string)
+
+//var userID = Cfg.UserID
 
 type URLStorage interface {
 	SetURL
@@ -27,7 +30,8 @@ type URLData struct {
 
 type GetURL interface {
 	Get(key string) (string, error)
-	GetReverse(key string) (string, error)
+	GetReverse(key, userID string) (string, error)
+	GetDB(key, userID string) (string, error)
 }
 
 func (s *URLMapStorage) Get(key string) (string, error) {
@@ -40,6 +44,7 @@ func (s *URLMapStorage) Get(key string) (string, error) {
 
 type SetURL interface {
 	Set(key, value string) error
+	SetDB(key, value, userID string) error
 }
 
 func (s *URLMapStorage) Set(key, value string) error {
@@ -88,36 +93,36 @@ type URLDBStorage struct {
 	error
 }
 
-func (s *URLDBStorage) Get(key string) (string, error) {
+func (s *URLDBStorage) GetBD(key, userID string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 and user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
 	return originalURL, err
 }
 
-func (s *URLDBStorage) GetReverse(key string) (string, error) {
+func (s *URLDBStorage) GetReverse(key, userID string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1", key).Scan(&originalURL)
+	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1 and user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
 	return originalURL, err
 }
 
-func (s *URLDBStorage) Set(key, value string) error {
+func (s *URLDBStorage) SetDB(key, value, userID string) error {
 	tx, err := s.conn.Begin(context.Background())
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
 		return err
 	}
 	_, err = tx.Exec(context.Background(), `
-		INSERT INTO url_storage (short_url, original_url)
-		VALUES ($1, $2)
+		INSERT INTO url_storage (short_url, original_url, user_id)
+		VALUES ($1, $2, $3)
 		ON CONFLICT (original_url)
 		DO UPDATE SET uuid = 1 
-	`, key, value)
+	`, key, value, userID)
 
 	if err != nil {
 		tx.Rollback(context.Background())
@@ -190,17 +195,39 @@ func (s *URLDBStorage) CreateTable() error {
         CREATE TABLE IF NOT EXISTS url_storage (
             uuid SERIAL PRIMARY KEY,
             short_url VARCHAR UNIQUE NOT NULL,
-            original_url VARCHAR UNIQUE NOT NULL
+            original_url VARCHAR UNIQUE NOT NULL,
+            user_id VARCHAR UNIQUE                                 
         );
     `)
 
 	s.conn.Exec(context.Background(), `
-        INSERT INTO url_storage (short_url, original_url) 
-        VALUES ('first_short_url', 'first_original_url');
+        INSERT INTO url_storage (short_url, original_url, user_id) 
+        VALUES ('first_short_url', 'first_original_url', 'first_user_id');
     `)
+	log.Println("CREATE FATAL ERROR")
 	return err
 }
 
-func (s *URLMapStorage) GetReverse(key string) (string, error) {
+func (s *URLMapStorage) GetReverse(key, userID string) (string, error) {
 	return "", nil
+}
+
+func (s *URLMapStorage) GetDB(key, userID string) (string, error) {
+	return "", nil
+}
+
+func (s *URLDBStorage) Get(key string) (string, error) {
+	return "", nil
+}
+
+func (s *URLMapStorage) SetDB(key, value, userID string) error {
+	return nil
+}
+
+func (s *URLDBStorage) GetDB(key, userID string) (string, error) {
+	return "", nil
+}
+
+func (s *URLDBStorage) Set(key, value string) error {
+	return nil
 }

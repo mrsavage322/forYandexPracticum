@@ -1,7 +1,6 @@
 package app
 
 import (
-	_ "github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"net/http"
 )
@@ -10,6 +9,8 @@ const (
 	cookieName     = "user_id"
 	cookieHttpOnly = true
 )
+
+//var UserID  string
 
 // AuthMiddleware is a middleware for authenticating users and setting a signed cookie with a unique user ID.
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -26,7 +27,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				HttpOnly: cookieHttpOnly,
 			}
 
-			// Set the cookie in the response
+			Cfg.UserID = userID.Value
+			//fmt.Println(Cfg.UserID)
 			http.SetCookie(w, &cookie)
 		}
 
@@ -38,8 +40,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 // AuthenticatorMiddleware is a middleware for checking the authenticity of the user ID in the cookie.
 func AuthenticatorMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := r.Cookie(cookieName)
-		if err != nil || userID.Value == "" {
+		UserID, err := r.Cookie(cookieName)
+		if err != nil || UserID.Value == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

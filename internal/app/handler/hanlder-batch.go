@@ -35,7 +35,7 @@ func HandleBatch(w http.ResponseWriter, r *http.Request) {
 		correlationID := req.CorrelID
 
 		if app.Cfg.DatabaseAddr != "" {
-			app.Cfg.URLMapDB.Set(id, link)
+			app.Cfg.URLMapDB.SetDB(id, link, app.Cfg.UserID)
 		} else {
 			app.Cfg.URLMap.Set(id, link)
 		}

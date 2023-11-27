@@ -14,11 +14,10 @@ type Config struct {
 	DatabaseAddr string `env:"DATABASE_DSN"`
 	URLMap       URLStorage
 	URLMapDB     URLStorage
-	//CookieName   string
+	UserID       string
 }
 
 func SetConfig() {
-	//var cfg Config
 	err := env.Parse(&Cfg)
 	if err != nil {
 		return

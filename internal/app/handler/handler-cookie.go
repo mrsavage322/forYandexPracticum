@@ -5,11 +5,10 @@ import (
 	"net/http"
 )
 
-//type ResponseBatchForUser struct {
-//	OriginalURL string `json:"original_url"`
-//	ShortURL    string `json:"short_url"`
-//}
-
+//	type ResponseBatchForUser struct {
+//		OriginalURL string `json:"original_url"`
+//		ShortURL    string `json:"short_url"`
+//	}
 const (
 	cookieName = "user_id"
 )
@@ -30,11 +29,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	urls := []struct {
 		ShortURL    string `json:"short_url"`
 		OriginalURL string `json:"original_url"`
-	}{
-		// Ваши данные из базы данных будут здесь
-		// Пример: {"short_url": "http://short1", "original_url": "http://original1"},
-		//         {"short_url": "http://short2", "original_url": "http://original2"},
-	}
+	}{}
 
 	// Проверяем, есть ли у пользователя сокращенные URL
 	if len(urls) == 0 {
