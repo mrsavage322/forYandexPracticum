@@ -13,8 +13,6 @@ const DefaultFilePath = "/tmp/short-url-db.json"
 
 var filename, data = DefaultFilePath, make(map[string]string)
 
-//var userID = Cfg.UserID
-
 type URLStorage interface {
 	SetURL
 	GetURL

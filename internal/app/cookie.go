@@ -10,7 +10,6 @@ const (
 	cookieHttpOnly = true
 )
 
-// AuthMiddleware is a middleware for authenticating users and setting a signed cookie with a unique user ID.
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := r.Cookie(cookieName)
@@ -32,7 +31,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// AuthenticatorMiddleware is a middleware for checking the authenticity of the user ID in the cookie.
 func AuthenticatorMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, err := r.Cookie(cookieName)
@@ -41,16 +39,7 @@ func AuthenticatorMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Your additional authentication logic goes here if needed
 		Cfg.UserID = userID.Value
-		// Call the next handler in the chain
 		next.ServeHTTP(w, r)
 	})
 }
-
-// Wrap your existing router with the new middleware
-//func ActivateCookie(r *chi.Mux) http.Handler {
-//	r.Use(AuthMiddleware)
-//	r.Use(AuthenticatorMiddleware)
-//	return r
-//}
