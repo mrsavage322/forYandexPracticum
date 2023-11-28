@@ -44,7 +44,8 @@ func (s *URLMapStorage) Get(key string) (string, error) {
 type SetURL interface {
 	Set(key, value string) error
 	SetDB(key, value, userID string) error
-	DeleteDB(key, userID string) error
+	DeleteDBPrepare(key, userID string) error
+	DeleteDBFinally(key, userID string) error
 }
 
 func (s *URLMapStorage) Set(key, value string) error {
@@ -140,7 +141,32 @@ func (s *URLDBStorage) GetDBAll(userID string) (map[string]string, error) {
 	return urlMap, nil
 }
 
-func (s *URLDBStorage) DeleteDB(key, userID string) error {
+func (s *URLDBStorage) DeleteDBFinally(key, userID string) error {
+	tx, err := s.conn.Begin(context.Background())
+	if err != nil {
+		sugar.Info("Error beginning transaction:", err)
+		return err
+	}
+	_, err = tx.Exec(context.Background(), `
+		DELETE FROM url_storage
+		WHERE short_url = $1 and user_id = $2 and is_delete = true
+	`, key, userID)
+
+	if err != nil {
+		tx.Rollback(context.Background())
+		sugar.Info("Error rolling back transaction:", err)
+		return err
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		sugar.Info("Error committing transaction:", err)
+		return err
+	}
+	return nil
+}
+
+func (s *URLDBStorage) DeleteDBPrepare(key, userID string) error {
 	tx, err := s.conn.Begin(context.Background())
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
@@ -291,6 +317,10 @@ func (s *URLMapStorage) GetDBNoCookie(key string) (string, error) {
 	return "", nil
 }
 
-func (s *URLMapStorage) DeleteDB(key, userID string) error {
+func (s *URLMapStorage) DeleteDBPrepare(key, userID string) error {
+	return nil
+}
+
+func (s *URLMapStorage) DeleteDBFinally(key, userID string) error {
 	return nil
 }

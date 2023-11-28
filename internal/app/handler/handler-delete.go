@@ -5,6 +5,7 @@ import (
 	"github.com/mrsavage322/foryandex/internal/app"
 	"log"
 	"net/http"
+	"sync"
 )
 
 func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
@@ -17,21 +18,33 @@ func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		resultChan := make(chan error, len(urls))
+		var wg sync.WaitGroup
 
 		go func() {
+			defer wg.Done()
 			for _, url := range urls {
-				err := app.Cfg.URLMapDB.DeleteDB(url, app.Cfg.UserID)
+				err := app.Cfg.URLMapDB.DeleteDBPrepare(url, app.Cfg.UserID)
 				resultChan <- err
 				if err != nil {
 					log.Println("Problem to remove url from BD ", err)
 					return
 				}
 			}
+		}()
+		go func() {
+			wg.Wait()
 			close(resultChan)
 		}()
+		for _, url := range urls {
+			err := app.Cfg.URLMapDB.DeleteDBFinally(url, app.Cfg.UserID)
+			resultChan <- err
+			if err != nil {
+				log.Println("Problem to remove url from BD ", err)
+				return
+			}
+		}
 
+		w.WriteHeader(http.StatusAccepted)
+		w.Write([]byte("URLs deleted"))
 	}
-
-	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("URLs deleted"))
 }
