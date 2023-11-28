@@ -34,14 +34,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func AuthenticatorMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := r.Cookie(cookieName)
-		if err != nil || userID.Value == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
+//func AuthenticatorMiddleware(next http.Handler) http.Handler {
+//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		userID, err := r.Cookie(cookieName)
+//		if err != nil || userID.Value == "" {
+//			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+//			return
+//		}
+//
+//		next.ServeHTTP(w, r)
+//	})

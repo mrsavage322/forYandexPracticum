@@ -30,11 +30,11 @@ func main() {
 	r.Post("/", handler.HandlePost)
 	r.Post("/api/shorten", handler.HandleJSON)
 	r.Post("/api/shorten/batch", handler.HandleBatch)
-	r.Route("/api/user/urls", func(r chi.Router) {
-		r.Use(app.AuthenticatorMiddleware)
-		r.Get("/", handler.GetUserURLs)
-	})
-	//r.Get("/api/user/urls", handler.GetUserURLs)
+	//r.Route("/api/user/urls", func(r chi.Router) {
+	//	r.Use(app.AuthenticatorMiddleware)
+	//	r.Get("/", handler.GetUserURLs)
+	//})
+	r.Get("/api/user/urls", handler.GetUserURLs)
 
 	srv := &http.Server{
 		Addr:    app.Cfg.ServerAddr,
