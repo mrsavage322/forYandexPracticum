@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	_ "sync"
 )
 
 func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
