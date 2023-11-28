@@ -9,7 +9,7 @@ import (
 func Redirect(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if app.Cfg.DatabaseAddr != "" {
-		originalURL, err := app.Cfg.URLMapDB.GetNewDB(id)
+		originalURL, err := app.Cfg.URLMapDB.GetDBNoCookie(id)
 		if err != nil {
 			http.Error(w, "Non-existent identifier", http.StatusBadRequest)
 			return

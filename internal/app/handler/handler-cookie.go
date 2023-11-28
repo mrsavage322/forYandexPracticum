@@ -15,7 +15,7 @@ type ResponseBatchForUser struct {
 	ShortURL    string `json:"short_url"`
 }
 
-func AuthenticatorMiddleware(w http.ResponseWriter, r *http.Request) {
+func Authenticator(w http.ResponseWriter, r *http.Request) {
 	userID, err := r.Cookie(cookieName)
 	if err != nil || userID.Value == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -33,7 +33,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Empty!", http.StatusNoContent)
 			return
 		}
-		AuthenticatorMiddleware(w, r)
+		Authenticator(w, r)
 		var response []ResponseBatchForUser
 		for shortURL, originalURL := range urlMap {
 			resp := ResponseBatchForUser{
