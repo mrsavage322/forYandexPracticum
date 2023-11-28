@@ -25,6 +25,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			}
 
 			http.SetCookie(w, &cookie)
+
+			Cfg.UserID = newUserID
+		} else {
+			Cfg.UserID = userID.Value
 		}
 
 		next.ServeHTTP(w, r)
@@ -39,7 +43,6 @@ func AuthenticatorMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		Cfg.UserID = userID.Value
 		next.ServeHTTP(w, r)
 	})
 }
