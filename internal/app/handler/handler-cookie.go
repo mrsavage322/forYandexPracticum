@@ -15,7 +15,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
 		urlMap, err := app.Cfg.URLMapDB.GetDBAll(app.Cfg.UserID)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			http.Error(w, "Internal Server Error", http.StatusNoContent)
 			return
 		} else if len(urlMap) == 0 {
 			http.Error(w, "Empty!", http.StatusNoContent)
@@ -33,7 +33,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 
 		responseData, err := json.Marshal(response)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusNoContent)
 			return
 		}
 
