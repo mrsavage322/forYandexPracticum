@@ -27,14 +27,11 @@ func main() {
 	r.Get("/", handler.Redirect)
 	r.Get("/{id}", handler.Redirect)
 	r.Get("/ping", handler.BDConnection)
+	r.Get("/api/user/urls", handler.GetUserURLs)
 	r.Post("/", handler.HandlePost)
 	r.Post("/api/shorten", handler.HandleJSON)
 	r.Post("/api/shorten/batch", handler.HandleBatch)
-	//r.Route("/api/user/urls", func(r chi.Router) {
-	//	r.Use(app.AuthenticatorMiddleware)
-	//	r.Get("/", handler.GetUserURLs)
-	//})
-	r.Get("/api/user/urls", handler.GetUserURLs)
+	r.Delete("/api/user/urls", handler.DeleteURLsHandler)
 
 	srv := &http.Server{
 		Addr:    app.Cfg.ServerAddr,

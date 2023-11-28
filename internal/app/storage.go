@@ -44,6 +44,7 @@ func (s *URLMapStorage) Get(key string) (string, error) {
 type SetURL interface {
 	Set(key, value string) error
 	SetDB(key, value, userID string) error
+	DeleteDB(key, userID string) error
 }
 
 func (s *URLMapStorage) Set(key, value string) error {
@@ -139,6 +140,32 @@ func (s *URLDBStorage) GetDBAll(userID string) (map[string]string, error) {
 	return urlMap, nil
 }
 
+func (s *URLDBStorage) DeleteDB(key, userID string) error {
+	tx, err := s.conn.Begin(context.Background())
+	if err != nil {
+		sugar.Info("Error beginning transaction:", err)
+		return err
+	}
+	_, err = tx.Exec(context.Background(), `
+		UPDATE url_storage
+		SET is_deleted = true
+		WHERE short_url = $1 and user_id = $2
+	`, key, userID)
+
+	if err != nil {
+		tx.Rollback(context.Background())
+		sugar.Info("Error rolling back transaction:", err)
+		return err
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		sugar.Info("Error committing transaction:", err)
+		return err
+	}
+	return nil
+}
+
 func (s *URLDBStorage) SetDB(key, value, userID string) error {
 	tx, err := s.conn.Begin(context.Background())
 	if err != nil {
@@ -224,7 +251,8 @@ func (s *URLDBStorage) CreateTable() error {
             uuid SERIAL PRIMARY KEY,
             short_url VARCHAR UNIQUE NOT NULL,
             original_url VARCHAR UNIQUE NOT NULL,
-            user_id VARCHAR                                 
+            user_id VARCHAR,
+            is_deleted BOOL                                 
         );
     `)
 
@@ -261,4 +289,8 @@ func (s *URLMapStorage) GetDBAll(userID string) (map[string]string, error) {
 
 func (s *URLMapStorage) GetDBNoCookie(key string) (string, error) {
 	return "", nil
+}
+
+func (s *URLMapStorage) DeleteDB(key, userID string) error {
+	return nil
 }
