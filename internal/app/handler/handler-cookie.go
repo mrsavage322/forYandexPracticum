@@ -17,9 +17,8 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
-		}
-		if len(urlMap) == 0 {
-			http.Error(w, err.Error(), http.StatusNoContent)
+		} else if len(urlMap) == 0 {
+			http.Error(w, "Empty!", http.StatusNoContent)
 			return
 		}
 
