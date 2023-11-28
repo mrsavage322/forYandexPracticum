@@ -7,7 +7,6 @@ import (
 
 const (
 	cookieName = "user_id"
-	//cookieHTTPOnly = true
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -21,8 +20,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			cookie := http.Cookie{
 				Name:  cookieName,
 				Value: newUserID,
-				//HttpOnly: cookieHTTPOnly,
-				Path: "/",
+				Path:  "/",
 			}
 
 			http.SetCookie(w, &cookie)
