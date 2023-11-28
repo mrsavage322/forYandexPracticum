@@ -11,6 +11,20 @@ type ResponseBatchForUser struct {
 	ShortURL    string `json:"short_url"`
 }
 
+const (
+	cookieName = "user_id"
+)
+
+//func Authenticator(w http.ResponseWriter, r *http.Request) {
+//	userID, err := r.Cookie(cookieName)
+//	if err != nil || userID.Value == "" {
+//		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+//		return
+//	}
+//	app.Cfg.UserID = userID.Value
+//	return
+//}
+
 func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
 		urlMap, err := app.Cfg.URLMapDB.GetDBAll(app.Cfg.UserID)

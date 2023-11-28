@@ -23,15 +23,18 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(app.LogRequest)
 	r.Use(handler.GzipMiddleware)
+	r.Use(app.AuthMiddleware)
 	r.Get("/", handler.Redirect)
 	r.Get("/{id}", handler.Redirect)
 	r.Get("/ping", handler.BDConnection)
 	r.Post("/", handler.HandlePost)
 	r.Post("/api/shorten", handler.HandleJSON)
 	r.Post("/api/shorten/batch", handler.HandleBatch)
-	r.Use(app.AuthMiddleware)
-	r.Use(app.AuthenticatorMiddleware)
-	r.Get("/api/user/urls", handler.GetUserURLs)
+	r.Route("/api/user/urls", func(r chi.Router) {
+		r.Use(app.AuthenticatorMiddleware)
+		r.Get("/api/user/urls", handler.GetUserURLs)
+	})
+	//r.Get("/api/user/urls", handler.GetUserURLs)
 
 	srv := &http.Server{
 		Addr:    app.Cfg.ServerAddr,
