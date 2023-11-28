@@ -19,7 +19,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(urlMap) == 0 {
-			w.WriteHeader(http.StatusNoContent)
+			http.Error(w, err.Error(), http.StatusNoContent)
 			return
 		}
 
