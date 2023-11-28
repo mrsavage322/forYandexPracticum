@@ -22,13 +22,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				Name:     cookieName,
 				Value:    newUserID,
 				HttpOnly: cookieHTTPOnly,
+				Path:     "/",
 			}
 
 			http.SetCookie(w, &cookie)
 
 			Cfg.UserID = newUserID
 		} else {
-			//Cfg.UserID = userID.Value
+			Cfg.UserID = userID.Value
 		}
 
 		next.ServeHTTP(w, r)
