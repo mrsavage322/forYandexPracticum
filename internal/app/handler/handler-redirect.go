@@ -11,6 +11,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
 		originalURL, err := app.Cfg.URLMapDB.GetDBNoCookie(id)
 		if err != nil {
+			//TODO Нужно поправить лоигку обработки с ссылкой, которой не было в БД и с ссылкой, которая была удалена
 			http.Error(w, "Non-existent identifier", http.StatusGone)
 			return
 		}
