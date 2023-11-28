@@ -23,14 +23,27 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(app.LogRequest)
 	r.Use(handler.GzipMiddleware)
-	r.Use(app.AuthMiddleware)
-	r.Get("/", handler.Redirect)
-	r.Get("/{id}", handler.Redirect)
+
+	//r.Get("/", handler.Redirect)
+	r.Route("/{id}", func(r chi.Router) {
+		r.Use(app.AuthMiddleware)
+		r.Get("/", handler.Redirect)
+	})
 	r.Get("/ping", handler.BDConnection)
-	r.Post("/", handler.HandlePost)
-	r.Post("/api/shorten", handler.HandleJSON)
-	r.Post("/api/shorten/batch", handler.HandleBatch)
+	r.Route("/", func(r chi.Router) {
+		r.Use(app.AuthMiddleware)
+		r.Post("/", handler.HandlePost)
+	})
+	r.Route("/api/shorten", func(r chi.Router) {
+		r.Use(app.AuthMiddleware)
+		r.Post("/", handler.HandleJSON)
+	})
+	r.Route("/api/shorten/batch", func(r chi.Router) {
+		r.Use(app.AuthMiddleware)
+		r.Post("/", handler.HandleBatch)
+	})
 	r.Route("/api/user/urls", func(r chi.Router) {
+		r.Use(app.AuthMiddleware)
 		r.Use(app.AuthenticatorMiddleware)
 		r.Get("/", handler.GetUserURLs)
 	})
