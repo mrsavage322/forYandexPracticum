@@ -11,7 +11,7 @@ func Redirect(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
 		originalURL, err := app.Cfg.URLMapDB.GetDBNoCookie(id)
 		if err != nil {
-			http.Error(w, "Non-existent identifier", http.StatusBadRequest)
+			http.Error(w, "Non-existent identifier", http.StatusGone)
 			return
 		}
 		w.Header().Set("Location", originalURL)

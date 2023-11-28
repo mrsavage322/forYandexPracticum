@@ -113,7 +113,7 @@ func (s *URLDBStorage) GetReverse(key, userID string) (string, error) {
 
 func (s *URLDBStorage) GetDBNoCookie(key string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1", key).Scan(&originalURL)
+	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 and is_deleted = false", key).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
@@ -252,7 +252,7 @@ func (s *URLDBStorage) CreateTable() error {
             short_url VARCHAR UNIQUE NOT NULL,
             original_url VARCHAR UNIQUE NOT NULL,
             user_id VARCHAR,
-            is_deleted BOOL                                 
+            is_deleted BOOL DEFAULT false                                
         );
     `)
 

@@ -34,7 +34,7 @@ func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		fmt.Println("URL:", urls)
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusAccepted)
 		w.Write([]byte("URLs marked as deleted"))
 	}
 
@@ -50,15 +50,6 @@ func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
 	//		}
 	//	}()
 	//
-	//	return nil
-	//}
-
-	//func MarkAsDeleted(id string) error {
-	//	// Используем параметризованный SQL-запрос для безопасной вставки данных.
-	//	_, err := db.Exec(context.Background(), "UPDATE url_storage SET is_deleted = $1 WHERE uuid = $2", true, id)
-	//	if err != nil {
-	//		return fmt.Errorf("error updating URL: %v", err)
-	//	}
 	//	return nil
 	//}
 }
