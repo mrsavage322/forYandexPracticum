@@ -25,7 +25,6 @@ func AuthenticatorMiddleware(w http.ResponseWriter, r *http.Request) {
 
 func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
-		AuthenticatorMiddleware(w, r)
 		urlMap, err := app.Cfg.URLMapDB.GetDBAll(app.Cfg.UserID)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -34,7 +33,7 @@ func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Empty!", http.StatusNoContent)
 			return
 		}
-
+		AuthenticatorMiddleware(w, r)
 		var response []ResponseBatchForUser
 		for shortURL, originalURL := range urlMap {
 			resp := ResponseBatchForUser{
