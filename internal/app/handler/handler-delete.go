@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/mrsavage322/foryandex/internal/app"
 	"log"
 	"net/http"
@@ -16,6 +15,7 @@ func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
 		// Декодирование JSON из тела запроса.
 		err := json.NewDecoder(r.Body).Decode(&urls)
 		if err != nil {
+			//TODO Нужно поправить лоигку обработки с ссылкой, которой не было в БД и с ссылкой, которая была удалена
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
@@ -26,30 +26,32 @@ func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
 		//	http.Error(w, "Error deleting URLs", http.StatusInternalServerError)
 		//	return
 		//}
-		for _, url := range urls {
-			err := app.Cfg.URLMapDB.DeleteDB(url, app.Cfg.UserID)
-			if err != nil {
-				log.Println("Problem to remove BD", err)
-				return
+		go func() {
+			for _, url := range urls {
+				err := app.Cfg.URLMapDB.DeleteDB(url, app.Cfg.UserID)
+				if err != nil {
+					log.Println("Problem to remove BD", err)
+					return
+				}
 			}
-		}
-		fmt.Println("URL:", urls)
-		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("URLs marked as deleted"))
+		}()
+
 	}
 
-	//// DeleteURLs выполняет асинхронное удаление URL из базы данных.
-	//func DeleteURLs(ids []string) error {
-	//	// Выполнение асинхронного удаления URL в горутине.
-	//	go func() {
-	//		for _, id := range ids {
-	//			err := MarkURLAsDeleted(id)
-	//			if err != nil {
-	//				log.Printf("Error marking URL as deleted: %v\n", err)
-	//			}
-	//		}
-	//	}()
-	//
-	//	return nil
-	//}
+	w.WriteHeader(http.StatusAccepted)
+	w.Write([]byte("URLs deleted"))
 }
+
+//func DeleteURLs(ids []string) error {
+//	// Выполнение асинхронного удаления URL в горутине.
+//	go func() {
+//		for _, id := range ids {
+//			err := MarkURLAsDeleted(id)
+//			if err != nil {
+//				log.Printf("Error marking URL as deleted: %v\n", err)
+//			}
+//		}
+//	}()
+//
+//	return nil
+//}
