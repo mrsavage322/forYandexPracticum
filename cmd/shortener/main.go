@@ -32,7 +32,7 @@ func main() {
 	r.Post("/api/shorten/batch", handler.HandleBatch)
 	r.Route("/api/user/urls", func(r chi.Router) {
 		r.Use(app.AuthenticatorMiddleware)
-		r.Get("/api/user/urls", handler.GetUserURLs)
+		r.Get("/", handler.GetUserURLs)
 	})
 	//r.Get("/api/user/urls", handler.GetUserURLs)
 
