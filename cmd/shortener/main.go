@@ -21,7 +21,6 @@ func main() {
 	var once sync.Once
 	once.Do(func() {
 		app.Cfg.URLMapDB = app.NewURLDBStorage(app.Cfg.DatabaseAddr)
-		return
 	})
 	app.InitializeLogger()
 
