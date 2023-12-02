@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"strconv"
-	"sync"
 )
 
 const DefaultFilePath = "/tmp/short-url-db.json"
@@ -16,9 +15,9 @@ const DefaultFilePath = "/tmp/short-url-db.json"
 var filename, data = DefaultFilePath, make(map[string]string)
 
 // var dbStorage URLStorage
-var dbPool *pgxpool.Pool
+//var dbPool *pgxpool.Pool
 
-var once sync.Once
+//var once sync.Once
 
 type URLStorage interface {
 	SetURL

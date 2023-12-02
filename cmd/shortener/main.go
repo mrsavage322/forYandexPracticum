@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -17,7 +18,11 @@ func main() {
 	app.SetFlags()
 	app.SetConfig()
 	app.Cfg.URLMap = app.NewURLMapStorage()
-	app.Cfg.URLMapDB = app.NewURLDBStorage(app.Cfg.DatabaseAddr)
+	var once sync.Once
+	once.Do(func() {
+		app.Cfg.URLMapDB = app.NewURLDBStorage(app.Cfg.DatabaseAddr)
+		return
+	})
 	app.InitializeLogger()
 
 	r := chi.NewRouter()
