@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mrsavage322/foryandex/internal/app"
 	"log"
 	"net/http"
