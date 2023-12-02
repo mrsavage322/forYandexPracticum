@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/mrsavage322/foryandex/internal/app"
@@ -35,7 +36,7 @@ func HandleBatch(w http.ResponseWriter, r *http.Request) {
 		correlationID := req.CorrelID
 
 		if app.Cfg.DatabaseAddr != "" {
-			app.Cfg.URLMapDB.SetDB(id, link, app.Cfg.UserID)
+			app.Cfg.URLMapDB.SetDB(context.Background(), id, link, app.Cfg.UserID)
 		} else {
 			app.Cfg.URLMap.Set(id, link)
 		}

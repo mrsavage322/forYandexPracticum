@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/mrsavage322/foryandex/internal/app"
 	"log"
@@ -24,7 +25,7 @@ func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
 		for _, url := range urls {
 			go func(url string) {
 				defer wg.Done()
-				err := app.Cfg.URLMapDB.DeleteDBPrepare(url, app.Cfg.UserID)
+				err := app.Cfg.URLMapDB.DeleteDBPrepare(context.Background(), url, app.Cfg.UserID)
 				resultChan <- err
 				if err != nil {
 					log.Println("Problem to remove url from BD ", err)
@@ -44,7 +45,7 @@ func DeleteURLsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, url := range urls {
-			err := app.Cfg.URLMapDB.DeleteDBFinally(url, app.Cfg.UserID)
+			err := app.Cfg.URLMapDB.DeleteDBFinally(context.Background(), url, app.Cfg.UserID)
 			if err != nil {
 				log.Println("Problem to remove url from BD ", err)
 				return

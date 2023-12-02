@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/mrsavage322/foryandex/internal/app"
@@ -30,9 +31,9 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 	shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, id)
 
 	if app.Cfg.DatabaseAddr != "" {
-		err := app.Cfg.URLMapDB.SetDB(id, link, app.Cfg.UserID)
+		err := app.Cfg.URLMapDB.SetDB(context.Background(), id, link, app.Cfg.UserID)
 		if err != nil {
-			originalURL, err := app.Cfg.URLMapDB.GetReverse(link, app.Cfg.UserID)
+			originalURL, err := app.Cfg.URLMapDB.GetReverse(context.Background(), link, app.Cfg.UserID)
 			if err != nil {
 				log.Println(err)
 				return

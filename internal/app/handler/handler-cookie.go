@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/mrsavage322/foryandex/internal/app"
 	"net/http"
@@ -25,7 +26,7 @@ func Authenticator(w http.ResponseWriter, r *http.Request) {
 
 func GetUserURLs(w http.ResponseWriter, r *http.Request) {
 	if app.Cfg.DatabaseAddr != "" {
-		urlMap, err := app.Cfg.URLMapDB.GetDBAll(app.Cfg.UserID)
+		urlMap, err := app.Cfg.URLMapDB.GetDBAll(context.Background(), app.Cfg.UserID)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return

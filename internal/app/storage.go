@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"sync"
 )
 
 const DefaultFilePath = "/tmp/short-url-db.json"
@@ -17,7 +18,7 @@ var filename, data = DefaultFilePath, make(map[string]string)
 // var dbStorage URLStorage
 var dbPool *pgxpool.Pool
 
-//var once sync.Once
+var once sync.Once
 
 type URLStorage interface {
 	SetURL
@@ -33,10 +34,10 @@ type URLData struct {
 
 type GetURL interface {
 	Get(key string) (string, error)
-	GetReverse(key, userID string) (string, error)
+	GetReverse(ctx context.Context, key, userID string) (string, error)
 	GetDBNoCookie(key string) (string, error)
-	GetDB(key, userID string) (string, error)
-	GetDBAll(userID string) (map[string]string, error)
+	GetDB(ctx context.Context, key, userID string) (string, error)
+	GetDBAll(ctx context.Context, userID string) (map[string]string, error)
 }
 
 //func init() {
@@ -66,9 +67,9 @@ func (s *URLMapStorage) Get(key string) (string, error) {
 
 type SetURL interface {
 	Set(key, value string) error
-	SetDB(key, value, userID string) error
-	DeleteDBPrepare(key, userID string) error
-	DeleteDBFinally(key, userID string) error
+	SetDB(ctx context.Context, key, value, userID string) error
+	DeleteDBPrepare(ctx context.Context, key, userID string) error
+	DeleteDBFinally(ctx context.Context, key, userID string) error
 }
 
 func (s *URLMapStorage) Set(key, value string) error {
@@ -104,6 +105,7 @@ func NewURLDBStorage(connString string) URLStorage {
 	if err != nil {
 		return nil
 	}
+	//defer pool.Close()
 
 	urlStorage := &URLDBStorage{
 		pool:  pool,
@@ -121,18 +123,18 @@ type URLDBStorage struct {
 	error
 }
 
-func (s *URLDBStorage) GetDB(key, userID string) (string, error) {
+func (s *URLDBStorage) GetDB(ctx context.Context, key, userID string) (string, error) {
 	var originalURL string
-	err := s.pool.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
+	err := s.pool.QueryRow(ctx, "SELECT original_url FROM url_storage WHERE short_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
 	return originalURL, err
 }
 
-func (s *URLDBStorage) GetReverse(key, userID string) (string, error) {
+func (s *URLDBStorage) GetReverse(ctx context.Context, key, userID string) (string, error) {
 	var originalURL string
-	err := s.pool.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
+	err := s.pool.QueryRow(ctx, "SELECT short_url FROM url_storage WHERE original_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
@@ -148,8 +150,8 @@ func (s *URLDBStorage) GetDBNoCookie(key string) (string, error) {
 	return originalURL, err
 }
 
-func (s *URLDBStorage) GetDBAll(userID string) (map[string]string, error) {
-	rows, err := s.pool.Query(context.Background(), "SELECT original_url, short_url FROM url_storage WHERE user_id = $1", userID)
+func (s *URLDBStorage) GetDBAll(ctx context.Context, userID string) (map[string]string, error) {
+	rows, err := s.pool.Query(ctx, "SELECT original_url, short_url FROM url_storage WHERE user_id = $1", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -168,24 +170,24 @@ func (s *URLDBStorage) GetDBAll(userID string) (map[string]string, error) {
 	return urlMap, nil
 }
 
-func (s *URLDBStorage) DeleteDBFinally(key, userID string) error {
-	tx, err := s.pool.Begin(context.Background())
+func (s *URLDBStorage) DeleteDBFinally(ctx context.Context, key, userID string) error {
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
 		return err
 	}
-	_, err = tx.Exec(context.Background(), `
+	_, err = tx.Exec(ctx, `
 		DELETE FROM url_storage
 		WHERE short_url = $1 and user_id = $2 and is_deleted = true
 	`, key, userID)
 
 	if err != nil {
-		tx.Rollback(context.Background())
+		tx.Rollback(ctx)
 		sugar.Info("Error rolling back transaction:", err)
 		return err
 	}
 
-	err = tx.Commit(context.Background())
+	err = tx.Commit(ctx)
 	if err != nil {
 		sugar.Info("Error committing transaction:", err)
 		return err
@@ -193,25 +195,25 @@ func (s *URLDBStorage) DeleteDBFinally(key, userID string) error {
 	return nil
 }
 
-func (s *URLDBStorage) DeleteDBPrepare(key, userID string) error {
-	tx, err := s.pool.Begin(context.Background())
+func (s *URLDBStorage) DeleteDBPrepare(ctx context.Context, key, userID string) error {
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
 		return err
 	}
-	_, err = tx.Exec(context.Background(), `
+	_, err = tx.Exec(ctx, `
 		UPDATE url_storage
 		SET is_deleted = true
 		WHERE short_url = $1 and user_id = $2
 	`, key, userID)
 
 	if err != nil {
-		tx.Rollback(context.Background())
+		tx.Rollback(ctx)
 		sugar.Info("Error rolling back transaction:", err)
 		return err
 	}
 
-	err = tx.Commit(context.Background())
+	err = tx.Commit(ctx)
 	if err != nil {
 		sugar.Info("Error committing transaction:", err)
 		return err
@@ -219,13 +221,13 @@ func (s *URLDBStorage) DeleteDBPrepare(key, userID string) error {
 	return nil
 }
 
-func (s *URLDBStorage) SetDB(key, value, userID string) error {
-	tx, err := s.pool.Begin(context.Background())
+func (s *URLDBStorage) SetDB(ctx context.Context, key, value, userID string) error {
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
 		return err
 	}
-	_, err = tx.Exec(context.Background(), `
+	_, err = tx.Exec(ctx, `
 		INSERT INTO url_storage (short_url, original_url, user_id)
 		VALUES ($1, $2, $3)
 		ON CONFLICT (original_url)
@@ -233,12 +235,12 @@ func (s *URLDBStorage) SetDB(key, value, userID string) error {
 	`, key, value, userID)
 
 	if err != nil {
-		tx.Rollback(context.Background())
+		tx.Rollback(ctx)
 		sugar.Info("Error rolling back transaction:", err)
 		return err
 	}
 
-	err = tx.Commit(context.Background())
+	err = tx.Commit(ctx)
 	if err != nil {
 		sugar.Info("Error committing transaction:", err)
 		return err
@@ -316,11 +318,11 @@ func (s *URLDBStorage) CreateTable() error {
 	return err
 }
 
-func (s *URLMapStorage) GetReverse(key, userID string) (string, error) {
+func (s *URLMapStorage) GetReverse(ctx context.Context, key, userID string) (string, error) {
 	return "", nil
 }
 
-func (s *URLMapStorage) GetDB(key, userID string) (string, error) {
+func (s *URLMapStorage) GetDB(ctx context.Context, key, userID string) (string, error) {
 	return "", nil
 }
 
@@ -328,7 +330,7 @@ func (s *URLDBStorage) Get(key string) (string, error) {
 	return "", nil
 }
 
-func (s *URLMapStorage) SetDB(key, value, userID string) error {
+func (s *URLMapStorage) SetDB(ctx context.Context, key, value, userID string) error {
 	return nil
 }
 
@@ -336,7 +338,7 @@ func (s *URLDBStorage) Set(key, value string) error {
 	return nil
 }
 
-func (s *URLMapStorage) GetDBAll(userID string) (map[string]string, error) {
+func (s *URLMapStorage) GetDBAll(ctx context.Context, userID string) (map[string]string, error) {
 	return nil, nil
 }
 
@@ -344,10 +346,10 @@ func (s *URLMapStorage) GetDBNoCookie(key string) (string, error) {
 	return "", nil
 }
 
-func (s *URLMapStorage) DeleteDBPrepare(key, userID string) error {
+func (s *URLMapStorage) DeleteDBPrepare(ctx context.Context, key, userID string) error {
 	return nil
 }
 
-func (s *URLMapStorage) DeleteDBFinally(key, userID string) error {
+func (s *URLMapStorage) DeleteDBFinally(ctx context.Context, key, userID string) error {
 	return nil
 }
