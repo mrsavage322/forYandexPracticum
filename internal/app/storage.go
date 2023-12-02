@@ -3,7 +3,8 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"io"
 	"os"
 	"strconv"
@@ -12,6 +13,11 @@ import (
 const DefaultFilePath = "/tmp/short-url-db.json"
 
 var filename, data = DefaultFilePath, make(map[string]string)
+
+// var dbStorage URLStorage
+var dbPool *pgxpool.Pool
+
+//var once sync.Once
 
 type URLStorage interface {
 	SetURL
@@ -32,6 +38,23 @@ type GetURL interface {
 	GetDB(key, userID string) (string, error)
 	GetDBAll(userID string) (map[string]string, error)
 }
+
+//func init() {
+//	dbStorage = NewURLDBStorage(Cfg.DatabaseAddr)
+//}
+
+//func InitDBPool(connString string) error {
+//	var err error
+//	once.Do(func() {
+//		config, err := pgxpool.ParseConfig(connString)
+//		if err != nil {
+//			panic(err)
+//		}
+//
+//		dbPool, err = pgxpool.NewWithConfig(context.Background(), config)
+//	})
+//	return err
+//}
 
 func (s *URLMapStorage) Get(key string) (string, error) {
 	value, ok := s.data[key]
@@ -72,14 +95,18 @@ func NewURLMapStorage() URLStorage {
 	}
 }
 
+//func GetDBPool() *pgxpool.Pool {
+//	return dbPool
+//}
+
 func NewURLDBStorage(connString string) URLStorage {
-	conn, err := pgx.Connect(context.Background(), connString)
+	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
 		return nil
 	}
 
 	urlStorage := &URLDBStorage{
-		conn:  conn,
+		pool:  pool,
 		error: err,
 	}
 
@@ -90,13 +117,13 @@ func NewURLDBStorage(connString string) URLStorage {
 }
 
 type URLDBStorage struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 	error
 }
 
 func (s *URLDBStorage) GetDB(key, userID string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
+	err := s.pool.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
@@ -105,7 +132,7 @@ func (s *URLDBStorage) GetDB(key, userID string) (string, error) {
 
 func (s *URLDBStorage) GetReverse(key, userID string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
+	err := s.pool.QueryRow(context.Background(), "SELECT short_url FROM url_storage WHERE original_url = $1 AND user_id = $2", key, userID).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
@@ -114,7 +141,7 @@ func (s *URLDBStorage) GetReverse(key, userID string) (string, error) {
 
 func (s *URLDBStorage) GetDBNoCookie(key string) (string, error) {
 	var originalURL string
-	err := s.conn.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 and is_deleted = false", key).Scan(&originalURL)
+	err := s.pool.QueryRow(context.Background(), "SELECT original_url FROM url_storage WHERE short_url = $1 and is_deleted = false", key).Scan(&originalURL)
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +149,7 @@ func (s *URLDBStorage) GetDBNoCookie(key string) (string, error) {
 }
 
 func (s *URLDBStorage) GetDBAll(userID string) (map[string]string, error) {
-	rows, err := s.conn.Query(context.Background(), "SELECT original_url, short_url FROM url_storage WHERE user_id = $1", userID)
+	rows, err := s.pool.Query(context.Background(), "SELECT original_url, short_url FROM url_storage WHERE user_id = $1", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -142,14 +169,14 @@ func (s *URLDBStorage) GetDBAll(userID string) (map[string]string, error) {
 }
 
 func (s *URLDBStorage) DeleteDBFinally(key, userID string) error {
-	tx, err := s.conn.Begin(context.Background())
+	tx, err := s.pool.Begin(context.Background())
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
 		return err
 	}
 	_, err = tx.Exec(context.Background(), `
 		DELETE FROM url_storage
-		WHERE short_url = $1 and user_id = $2 and is_delete = true
+		WHERE short_url = $1 and user_id = $2 and is_deleted = true
 	`, key, userID)
 
 	if err != nil {
@@ -167,7 +194,7 @@ func (s *URLDBStorage) DeleteDBFinally(key, userID string) error {
 }
 
 func (s *URLDBStorage) DeleteDBPrepare(key, userID string) error {
-	tx, err := s.conn.Begin(context.Background())
+	tx, err := s.pool.Begin(context.Background())
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
 		return err
@@ -193,7 +220,7 @@ func (s *URLDBStorage) DeleteDBPrepare(key, userID string) error {
 }
 
 func (s *URLDBStorage) SetDB(key, value, userID string) error {
-	tx, err := s.conn.Begin(context.Background())
+	tx, err := s.pool.Begin(context.Background())
 	if err != nil {
 		sugar.Info("Error beginning transaction:", err)
 		return err
@@ -267,12 +294,12 @@ func (s *URLDBStorage) SaveToFile() error {
 	return nil
 }
 
-func (s *URLDBStorage) CloseDB() {
-	s.conn.Close(context.Background())
-}
+//func (s *URLDBStorage) CloseDB() {
+//	s.pool.Close(context.Background())
+//}
 
 func (s *URLDBStorage) CreateTable() error {
-	_, err := s.conn.Exec(context.Background(), `
+	_, err := s.pool.Exec(context.Background(), `
         CREATE TABLE IF NOT EXISTS url_storage (
             uuid SERIAL PRIMARY KEY,
             short_url VARCHAR UNIQUE NOT NULL,
@@ -282,7 +309,7 @@ func (s *URLDBStorage) CreateTable() error {
         );
     `)
 
-	s.conn.Exec(context.Background(), `
+	s.pool.Exec(context.Background(), `
         INSERT INTO url_storage (short_url, original_url, user_id) 
         VALUES ('first_short_url', 'first_original_url', 'first_user_id');
     `)
