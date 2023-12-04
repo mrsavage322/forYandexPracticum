@@ -14,11 +14,12 @@ import (
 	"time"
 )
 
+var once sync.Once
+
 func main() {
 	app.SetFlags()
 	app.SetConfig()
 	app.Cfg.URLMap = app.NewURLMapStorage()
-	var once sync.Once
 	once.Do(func() {
 		app.Cfg.URLMapDB = app.NewURLDBStorage(app.Cfg.DatabaseAddr)
 	})

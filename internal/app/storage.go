@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	_ "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"io"
 	"os"
@@ -13,11 +12,6 @@ import (
 const DefaultFilePath = "/tmp/short-url-db.json"
 
 var filename, data = DefaultFilePath, make(map[string]string)
-
-// var dbStorage URLStorage
-//var dbPool *pgxpool.Pool
-
-//var once sync.Once
 
 type URLStorage interface {
 	SetURL
@@ -38,23 +32,6 @@ type GetURL interface {
 	GetDB(ctx context.Context, key, userID string) (string, error)
 	GetDBAll(ctx context.Context, userID string) (map[string]string, error)
 }
-
-//func init() {
-//	dbStorage = NewURLDBStorage(Cfg.DatabaseAddr)
-//}
-
-//func InitDBPool(connString string) error {
-//	var err error
-//	once.Do(func() {
-//		config, err := pgxpool.ParseConfig(connString)
-//		if err != nil {
-//			panic(err)
-//		}
-//
-//		dbPool, err = pgxpool.NewWithConfig(context.Background(), config)
-//	})
-//	return err
-//}
 
 func (s *URLMapStorage) Get(key string) (string, error) {
 	value, ok := s.data[key]
@@ -94,10 +71,6 @@ func NewURLMapStorage() URLStorage {
 		filename: filename,
 	}
 }
-
-//func GetDBPool() *pgxpool.Pool {
-//	return dbPool
-//}
 
 func NewURLDBStorage(connString string) URLStorage {
 	pool, err := pgxpool.New(context.Background(), connString)
@@ -294,10 +267,6 @@ func loadDataFromFile(filename string) map[string]string {
 func (s *URLDBStorage) SaveToFile() error {
 	return nil
 }
-
-//func (s *URLDBStorage) CloseDB() {
-//	s.pool.Close(context.Background())
-//}
 
 func (s *URLDBStorage) CreateTable() error {
 	_, err := s.pool.Exec(context.Background(), `
