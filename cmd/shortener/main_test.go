@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/mrsavage322/foryandex/internal/app"
+	"github.com/mrsavage322/foryandex/internal/app/handler"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -62,15 +63,15 @@ func TestHandler(t *testing.T) {
 			if test.method == http.MethodPost {
 				request := httptest.NewRequest(test.method, test.request, strings.NewReader(test.body))
 				recorder := httptest.NewRecorder()
-				app.HandlePost(recorder, request)
-				app.HandleJSON(recorder, request)
+				handler.HandlePost(recorder, request)
+				handler.HandleJSON(recorder, request)
 				response = recorder.Result()
 			} else if test.method == http.MethodGet {
-				id := app.GenerateRandomID(5)
+				id := handler.GenerateRandomID(5)
 				app.Cfg.URLMap.Set(id, "https://example.com")
 				request := httptest.NewRequest(test.method, test.request, nil)
 				response = httptest.NewRecorder().Result()
-				app.Redirect(httptest.NewRecorder(), request)
+				handler.Redirect(httptest.NewRecorder(), request)
 			}
 			defer response.Body.Close()
 

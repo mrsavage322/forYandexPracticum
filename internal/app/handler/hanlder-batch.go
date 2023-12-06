@@ -1,8 +1,10 @@
-package app
+package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/mrsavage322/foryandex/internal/app"
 	"net/http"
 )
 
@@ -30,13 +32,13 @@ func HandleBatch(w http.ResponseWriter, r *http.Request) {
 	for _, req := range reqs {
 		link := req.OriginURL
 		id := GenerateRandomID(5)
-		shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, id)
+		shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, id)
 		correlationID := req.CorrelID
 
-		if Cfg.DatabaseAddr != "" {
-			Cfg.URLMapDB.Set(id, link)
+		if app.Cfg.DatabaseAddr != "" {
+			app.Cfg.URLMapDB.SetDB(context.Background(), id, link, app.Cfg.UserID)
 		} else {
-			Cfg.URLMap.Set(id, link)
+			app.Cfg.URLMap.Set(id, link)
 		}
 
 		resp := ResponseBatch{

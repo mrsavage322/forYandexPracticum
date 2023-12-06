@@ -1,8 +1,11 @@
-package app
+package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/mrsavage322/foryandex/internal/app"
+	"log"
 	"net/http"
 )
 
@@ -25,17 +28,17 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 
 	link := req.URL
 	id := GenerateRandomID(5)
-	shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, id)
+	shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, id)
 
-	if Cfg.DatabaseAddr != "" {
-		err := Cfg.URLMapDB.Set(id, link)
+	if app.Cfg.DatabaseAddr != "" {
+		err := app.Cfg.URLMapDB.SetDB(context.Background(), id, link, app.Cfg.UserID)
 		if err != nil {
-			originalURL, err := Cfg.URLMapDB.GetReverse(link)
+			originalURL, err := app.Cfg.URLMapDB.GetReverse(context.Background(), link, app.Cfg.UserID)
 			if err != nil {
-				sugar.Warnln(err)
+				log.Println(err)
 				return
 			}
-			shortURL := fmt.Sprintf("%s/%s", Cfg.BaseURL, originalURL)
+			shortURL := fmt.Sprintf("%s/%s", app.Cfg.BaseURL, originalURL)
 			resp := Response{Result: shortURL}
 			responseData, err := json.Marshal(resp)
 			if err != nil {
@@ -48,7 +51,7 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		Cfg.URLMap.Set(id, link)
+		app.Cfg.URLMap.Set(id, link)
 	}
 
 	resp := Response{Result: shortURL}
